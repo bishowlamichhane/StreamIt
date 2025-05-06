@@ -1,7 +1,7 @@
 import { io } from "socket.io-client"
 
 // Get the API URL from environment variables
-const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
+const API_URL = "https://streamit-1.onrender.com" || "http://localhost:8000"
 
 // Create a socket instance with proper configuration
 export const socket = io(API_URL, {
