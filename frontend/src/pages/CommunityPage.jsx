@@ -309,14 +309,10 @@ const CommunityPage = () => {
     setCreatingCommunity(true);
 
     try {
-      // This is a placeholder for the API call that the user will implement
-      // await API.post("/v1/community/create", {
-      //   name: communityName,
-      //   description: communityDescription,
-      //   userId: user?._id
-      // })
+      await API.post("/v1/community/create-community", {
+        name: communityName,
+      });
 
-      // For now, just show a success message
       toast.success("Community created successfully!");
 
       // Reset form
