@@ -14,6 +14,7 @@ const Login = () => {
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const setAuth = useAuthStore((state) => state.setAuth);
   const toast = useToast();
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -21,15 +22,18 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await API.post("/v1/users/login", form);
       const { user, accessToken, refreshToken } = res.data.data;
 
-      setAuth({ user, accessToken, refreshToken }); // ✅ include refreshToken too
+      setAuth({ user, accessToken, refreshToken });
       toast.success("Login successful");
       navigate("/");
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,9 +79,17 @@ const Login = () => {
 
         <Button
           type="submit"
+          disabled={loading}
           className="w-full py-3 bg-blue-500 text-white hover:bg-blue-600 transition duration-300 rounded-md cursor-pointer"
         >
-          Login
+          {loading ? (
+            <div className="flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+              Logging in...
+            </div>
+          ) : (
+            "Login"
+          )}
         </Button>
       </form>
 

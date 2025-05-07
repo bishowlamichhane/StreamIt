@@ -19,6 +19,7 @@ const Register = () => {
     coverImage: null,
   });
   const toast = useToast();
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -31,6 +32,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const data = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       if (value) data.append(key, value);
@@ -42,6 +44,8 @@ const Register = () => {
       navigate("/login");
     } catch (err) {
       toast.error(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -126,9 +130,17 @@ const Register = () => {
 
         <Button
           type="submit"
+          disabled={loading}
           className="w-full py-3 bg-blue-500 text-white hover:bg-blue-600 transition duration-300 rounded-md cursor-pointer"
         >
-          Register
+          {loading ? (
+            <div className="flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+              Registering...
+            </div>
+          ) : (
+            "Register"
+          )}
         </Button>
       </form>
 
