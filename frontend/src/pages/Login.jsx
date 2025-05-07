@@ -1,3 +1,5 @@
+"use client";
+
 // src/pages/Login.jsx
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -5,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import API from "@/api";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const setAuth = useAuthStore((state) => state.setAuth);
+  const toast = useToast();
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -22,10 +26,10 @@ const Login = () => {
       const { user, accessToken, refreshToken } = res.data.data;
 
       setAuth({ user, accessToken, refreshToken }); // ✅ include refreshToken too
-
+      toast.success("Login successful");
       navigate("/");
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
+      toast.error(err.response?.data?.message || "Login failed");
     }
   };
 

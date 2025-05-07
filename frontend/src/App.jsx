@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { ToastProvider } from "@/components/ToastProvider";
 
 const App = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <ToastProvider />
       <Outlet />
     </div>
   );

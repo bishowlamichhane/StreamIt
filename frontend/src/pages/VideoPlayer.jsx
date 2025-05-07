@@ -19,6 +19,7 @@ import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { clsx } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 dayjs.extend(relativeTime);
 
 export default function VideoPlayer() {
@@ -33,11 +34,18 @@ export default function VideoPlayer() {
   const [relatedVideos, setRelatedVideos] = useState([]);
   const [commentText, setCommentText] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar collapsed by default
+  const [videoLoaded, setVideoLoaded] = useState(false); // Track if video data has been loaded
   const user = useAuthStore((state) => state.user);
+  const toast = useToast();
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
   useEffect(() => {
+    // Reset states when video ID changes
+    setLoading(true);
+    setVideoLoaded(false);
+    setVideo(null);
+
     const fetchVideo = async () => {
       try {
         const res = await API.get(`/v1/videos/v/${id}`, {
@@ -48,10 +56,12 @@ export default function VideoPlayer() {
 
         const foundVideo = res.data.data || null;
         setVideo(foundVideo);
+        setVideoLoaded(true);
 
         await API.post("/v1/users/watch-history", { videoId: id });
       } catch (err) {
         console.error("Error loading video", err);
+        setVideoLoaded(true); // Mark as loaded even on error to show error state
       } finally {
         setLoading(false);
       }
@@ -85,31 +95,6 @@ export default function VideoPlayer() {
     fetchSubs();
   }, [video]); // ✅ dependency is [video] not []
 
-  const handleSubscribe = async () => {
-    if (!user) {
-      navigate("/login");
-    }
-    try {
-      const res = await API.post(`/v1/subs/sub/${video.owner?._id}`, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
-
-      const message = res.data.message;
-      message === "Subscribed" ? setIsSubscribed(true) : setIsSubscribed(false);
-
-      const updated = await API.get(`/v1/videos/v/${id}`, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
-      setVideo(updated.data.data);
-    } catch (err) {
-      console.log("Error with subscription :", err);
-    }
-  };
-
   const handleLikeToggle = async () => {
     try {
       await API.post(`/v1/likes/like/${id}`, {
@@ -124,8 +109,51 @@ export default function VideoPlayer() {
         },
       });
       setVideo(updated.data.data);
+      toast.success(
+        video.isLikedByUser
+          ? "Removed from liked videos"
+          : "Added to liked videos"
+      );
     } catch (err) {
       console.error("Failed to toggle like", err);
+      toast.error("Failed to update like status");
+    }
+  };
+
+  const handleSubscribe = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const res = await API.post(`/v1/subs/sub/${video.owner?._id}`, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+
+      const message = res.data.message;
+      if (message === "Subscribed") {
+        setIsSubscribed(true);
+        toast.success(
+          `Subscribed to ${video.owner.fullName || video.owner.username}`
+        );
+      } else {
+        setIsSubscribed(false);
+        toast.info(
+          `Unsubscribed from ${video.owner.fullName || video.owner.username}`
+        );
+      }
+
+      const updated = await API.get(`/v1/videos/v/${id}`, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+      setVideo(updated.data.data);
+    } catch (err) {
+      console.log("Error with subscription :", err);
+      toast.error("Failed to update subscription");
     }
   };
 
@@ -139,8 +167,6 @@ export default function VideoPlayer() {
         setRelatedVideos(actualVideos);
       } catch (err) {
         console.log("Failed to load videos ", err);
-      } finally {
-        setLoading(false);
       }
     };
     fetchRandomVideos();
@@ -158,11 +184,12 @@ export default function VideoPlayer() {
 
     try {
       await API.post(`/v1/comments/add/${id}`, { commentText });
-
+      toast.success("Comment added successfully");
       // ✅ Refetch all comments from backend
       fetchComments();
     } catch (err) {
       console.log("Error adding comment ", err);
+      toast.error("Failed to add comment");
     }
 
     setCommentText("");
@@ -191,7 +218,8 @@ export default function VideoPlayer() {
     fetchComments();
   }, [id]); // ✅ now it runs only when video id changes
 
-  if (loading) {
+  // Show loading state until both loading is complete and video data is processed
+  if (loading || !videoLoaded) {
     return (
       <div className="flex h-screen bg-background text-foreground">
         <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -203,13 +231,17 @@ export default function VideoPlayer() {
         >
           <Header />
           <div className="flex items-center justify-center h-screen">
-            <div className="w-12 h-12 border-4 border-muted border-t-primary rounded-full animate-spin"></div>
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 border-4 border-muted border-t-primary rounded-full animate-spin mb-4"></div>
+              <p className="text-muted-foreground">Loading video...</p>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // Only show "Video Not Found" after loading is complete and we know there's no video
   if (!video) {
     return (
       <div className="flex h-screen bg-background text-foreground">
@@ -287,7 +319,7 @@ export default function VideoPlayer() {
                         className={`flex items-center px-4 py-2 gap-1 hover:bg-accent transition-colors cursor-pointer ${
                           video.isLikedByUser
                             ? "text-primary font-medium"
-                            : "text-foreground"
+                            : "text-foreground  "
                         }`}
                         onClick={handleLikeToggle}
                       >

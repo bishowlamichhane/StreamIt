@@ -5,6 +5,7 @@ import API from "@/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Camera, Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EditProfileForm({ currentData, onSuccess }) {
   const [form, setForm] = useState({
@@ -20,6 +21,7 @@ export default function EditProfileForm({ currentData, onSuccess }) {
   const [coverPreview, setCoverPreview] = useState(
     currentData.coverImage || null
   );
+  const toast = useToast();
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -62,11 +64,11 @@ export default function EditProfileForm({ currentData, onSuccess }) {
         await API.post("/v1/users/cover-image", coverForm);
       }
 
-      alert("Profile updated successfully");
+      toast.success("Profile updated successfully");
       onSuccess();
     } catch (err) {
       console.error("Error updating profile", err);
-      alert(err.response?.data?.message || "Something went wrong.");
+      toast.error(err.response?.data?.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }

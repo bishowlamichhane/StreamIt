@@ -1,9 +1,12 @@
+"use client";
+
 // src/pages/Register.jsx
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import API from "@/api";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -15,6 +18,7 @@ const Register = () => {
     avatar: null,
     coverImage: null,
   });
+  const toast = useToast();
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -34,10 +38,10 @@ const Register = () => {
 
     try {
       const res = await API.post("/v1/users/register", data);
-      alert("Registration successful! Please login.");
+      toast.success("Registration successful! Please login.");
       navigate("/login");
     } catch (err) {
-      alert(err.response?.data?.message || "Registration failed");
+      toast.error(err.response?.data?.message || "Registration failed");
     }
   };
 

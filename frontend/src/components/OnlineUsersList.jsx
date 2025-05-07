@@ -7,12 +7,17 @@ export default function OnlineUsersList() {
   const { onlineUsers } = useCommunityStore();
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Deduplicate users based on _id
+  const uniqueUsers = Array.from(
+    new Map(onlineUsers.map((user) => [user._id, user])).values()
+  );
+
   // Filter users based on search query
   const filteredUsers = searchQuery
-    ? onlineUsers.filter((user) =>
+    ? uniqueUsers.filter((user) =>
         user.username.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : onlineUsers;
+    : uniqueUsers;
 
   return (
     <div className="flex flex-col h-full">

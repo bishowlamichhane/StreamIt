@@ -12,6 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { clsx } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ChannelCommunity() {
   const { username } = useParams();
@@ -21,6 +22,7 @@ export default function ChannelCommunity() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const toast = useToast();
 
   useEffect(() => {
     const fetchCommunity = async () => {
@@ -128,7 +130,7 @@ export default function ChannelCommunity() {
                 } else {
                   // Fallback - copy to clipboard
                   navigator.clipboard.writeText(window.location.href);
-                  alert("Link copied to clipboard!");
+                  toast.success("Link copied to clipboard!");
                 }
               }}
               className="flex items-center text-sm text-muted-foreground hover:text-foreground cursor-pointer"
