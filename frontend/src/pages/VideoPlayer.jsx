@@ -97,6 +97,9 @@ export default function VideoPlayer() {
 
   const handleLikeToggle = async () => {
     try {
+      // Store the current liked state before making the API call
+      const wasLiked = video.isLikedByUser;
+
       await API.post(`/v1/likes/like/${id}`, {
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
@@ -109,10 +112,10 @@ export default function VideoPlayer() {
         },
       });
       setVideo(updated.data.data);
+
+      // Show appropriate toast message based on the previous state
       toast.success(
-        video.isLikedByUser
-          ? "Removed from liked videos"
-          : "Added to liked videos"
+        wasLiked ? "Removed from liked videos" : "Added to liked videos"
       );
     } catch (err) {
       console.error("Failed to toggle like", err);
@@ -319,11 +322,18 @@ export default function VideoPlayer() {
                         className={`flex items-center px-4 py-2 gap-1 hover:bg-accent transition-colors cursor-pointer ${
                           video.isLikedByUser
                             ? "text-primary font-medium"
-                            : "text-foreground  "
+                            : "text-foreground"
                         }`}
                         onClick={handleLikeToggle}
                       >
-                        <ThumbsUp size={18} />
+                        <ThumbsUp
+                          size={18}
+                          className={`transition-all duration-300 ${
+                            video.isLikedByUser
+                              ? "text-primary fill-primary scale-110"
+                              : "text-foreground"
+                          } active:scale-150 active:rotate-12`}
+                        />
                         <span>{video.likeCount?.toLocaleString() || "0"}</span>
                       </button>
                       <div className="h-5 w-px bg-border"></div>
