@@ -2,12 +2,11 @@
 
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Bell, Sun, Moon, Upload } from "lucide-react";
+import { Search, Bell, Sun, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
-import API from "../api";
 import { clsx } from "@/lib/utils";
 import { useUploadModal } from "../store/modalStore";
 
@@ -36,7 +35,7 @@ export default function Header() {
     <header className="flex items-center justify-between h-16 px-4 border-b bg-background border-border">
       <div className="flex items-center gap-4">
         <Link to="/" className="flex items-center gap-2">
-          <h1 className="text-xl font-bold text-foreground">🎬 StreamIt</h1>
+          <h1 className="text-xl font-bold text-foreground">🎬 StreamDrop</h1>
         </Link>
       </div>
 
@@ -51,7 +50,7 @@ export default function Header() {
           <Input
             type="text"
             placeholder="Search channels or videos..."
-            className="w-full pl-10 pr-12 py-2 bg-muted border-none focus:ring-2 focus:ring-primary text-foreground"
+            className="w-full pl-10 pr-12 py-2 bg-secondary border-none focus:ring-2 focus:ring-primary text-foreground"
             ref={userNameElement}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setIsSearchFocused(false)}

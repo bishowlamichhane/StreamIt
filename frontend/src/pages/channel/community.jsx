@@ -52,7 +52,7 @@ export default function ChannelCommunity() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 w-full">
+      <div className="bg-card rounded-lg shadow-md p-6 w-full border border-border">
         <div className="flex flex-col items-center justify-center h-48 space-y-4">
           <Loader2 className="w-10 h-10 text-primary animate-spin" />
           <p className="text-muted-foreground">Loading community...</p>
@@ -63,7 +63,7 @@ export default function ChannelCommunity() {
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 w-full">
+      <div className="bg-card rounded-lg shadow-md p-6 w-full border border-border">
         <div className="flex flex-col items-center justify-center h-48 space-y-4">
           <div className="text-destructive text-center">
             <p className="text-lg font-medium">Something went wrong</p>
@@ -81,8 +81,10 @@ export default function ChannelCommunity() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 w-full">
-      <h2 className="text-xl font-bold mb-4 border-b pb-2">Community</h2>
+    <div className="bg-card rounded-lg shadow-md p-6 w-full border border-border">
+      <h2 className="text-xl font-bold mb-4 border-b pb-2 border-border">
+        Community
+      </h2>
 
       {community ? (
         <div className="space-y-4">
@@ -91,7 +93,9 @@ export default function ChannelCommunity() {
               <Users className="w-8 h-8 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold">{community.name}</h3>
+              <h3 className="text-lg font-semibold text-card-foreground">
+                {community.name}
+              </h3>
               <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
                 <div className="flex items-center">
                   <MessageSquare className="w-4 h-4 mr-1" />
@@ -146,7 +150,9 @@ export default function ChannelCommunity() {
             <Users className="w-10 h-10 text-muted-foreground" />
           </div>
           <div className="text-center">
-            <h3 className="text-lg font-medium">No Community Created</h3>
+            <h3 className="text-lg font-medium text-card-foreground">
+              No Community Created
+            </h3>
             <p className="text-sm text-muted-foreground mt-1">
               Create a community to connect with your audience and build a space
               for discussions.

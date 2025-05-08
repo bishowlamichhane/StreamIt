@@ -38,8 +38,8 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-8 rounded-xl shadow-lg mt-20 bg-white">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
+    <div className="max-w-md mx-auto p-8 rounded-xl shadow-lg mt-20 bg-card border border-border">
+      <h2 className="text-3xl font-bold mb-6 text-center text-card-foreground">
         Welcome Back! Please Login
       </h2>
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -50,7 +50,7 @@ const Login = () => {
             value={form.username}
             onChange={handleChange}
             required
-            className="px-4 py-3 border border-gray-300 rounded-md w-full"
+            className="px-4 py-3 border border-border rounded-md w-full bg-background text-foreground"
           />
         </div>
 
@@ -61,7 +61,7 @@ const Login = () => {
             value={form.email}
             onChange={handleChange}
             required
-            className="px-4 py-3 border border-gray-300 rounded-md w-full"
+            className="px-4 py-3 border border-border rounded-md w-full bg-background text-foreground"
           />
         </div>
 
@@ -73,18 +73,18 @@ const Login = () => {
             value={form.password}
             onChange={handleChange}
             required
-            className="px-4 py-3 border border-gray-300 rounded-md w-full"
+            className="px-4 py-3 border border-border rounded-md w-full bg-background text-foreground"
           />
         </div>
 
         <Button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-blue-500 text-white hover:bg-blue-600 transition duration-300 rounded-md cursor-pointer"
+          className="w-full py-3 bg-primary text-primary-foreground hover:bg-primary/90 transition duration-300 rounded-md cursor-pointer"
         >
           {loading ? (
             <div className="flex items-center justify-center">
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+              <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2"></div>
               Logging in...
             </div>
           ) : (
@@ -94,11 +94,11 @@ const Login = () => {
       </form>
 
       <div className="mt-6 text-center">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Don't have an account?{" "}
           <a
             href="/register"
-            className="text-blue-500 hover:text-blue-700 font-semibold cursor-pointer"
+            className="text-primary hover:text-primary/90 font-semibold cursor-pointer"
           >
             Create an Account
           </a>

@@ -17,7 +17,7 @@ function LikedVideos() {
             Authorization: `Bearer ${user.accessToken}`,
           },
         });
-        setLikedVideos(response.data.data);
+        setLikedVideos(response?.data.data);
       } catch (err) {
         console.error(err);
         setError("Failed to load liked videos.");
@@ -38,32 +38,32 @@ function LikedVideos() {
       {likedVideos.length === 0 ? (
         <p>No liked videos found.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 ">
           {likedVideos.map(({ videoDetails }) => {
             const video = videoDetails[0];
             const owner = video?.owner || {};
 
             return (
               <div
-                key={video._id}
-                className="bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition duration-300"
+                key={video?._id}
+                className=" bg-card  rounded-lgoverflow-hidden shadow hover:shadow-md transition duration-300"
               >
                 <div className="w-full h-48 bg-black">
-                  <Link to={`/video/${video._id}`}>
+                  <Link to={`/video/${video?._id}`}>
                     <img
-                      src={video.thumbnail || "/default-thumbnail.jpg"}
-                      alt={video.title}
+                      src={video?.thumbnail || "/default-thumbnail.jpg"}
+                      alt={video?.title}
                       className="w-full h-full object-cover"
                     />
                   </Link>
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-base mb-2">
-                    {video.title}
+                    {video?.title}
                   </h3>
 
                   <Link
-                    to={`/dashboard/channel/${video.owner.username}/${video.owner._id}`}
+                    to={`/dashboard/channel/${video?.owner.username}/${video?.owner._id}`}
                     className="flex items-center gap-3 mb-1"
                   >
                     <img
@@ -76,7 +76,7 @@ function LikedVideos() {
                     </p>
                   </Link>
                   <p className="text-xs text-gray-500">
-                    {video.views || 0} views
+                    {video?.views || 0} views
                   </p>
                 </div>
               </div>

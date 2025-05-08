@@ -65,15 +65,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           isOpen ? "w-64" : "w-16"
         )}
       >
-        <div className="flex items-center h-16 px-4 border-b border-sidebar-border justify-between">
+        <div className="flex items-center h-16 px-4 border-b border-sidebar-border justify-end">
           {isOpen ? (
             <>
-              <Link to="/" className="font-bold text-xl">
-                🎬 StreamIt
-              </Link>
               <button
                 onClick={toggleSidebar}
-                className="p-2 rounded-full hover:bg-sidebar-accent text-sidebar-foreground transition-colors cursor-pointer"
+                className="p-2 rounded-full hover:bg-sidebar-accent text-sidebar-foreground transition-colors cursor-pointer "
                 aria-label="Collapse sidebar"
               >
                 <ChevronLeft className="h-5 w-5" />

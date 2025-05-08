@@ -85,7 +85,7 @@ export default function ChannelLayout() {
             className="w-full h-full object-cover"
             alt="Channel cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
         </div>
 
         <div className="container mx-auto px-4">
@@ -165,19 +165,19 @@ export default function ChannelLayout() {
                     onClick={handleSubscribe}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1 ${
                       isSubscribed
-                        ? "bg-muted text-foreground hover:bg-accent"
+                        ? "bg-secondary text-foreground hover:bg-secondary/80"
                         : "bg-primary text-primary-foreground hover:bg-primary/90"
                     }`}
                   >
                     {isSubscribed ? "Subscribed" : "Subscribe"}
                   </button>
-                  <button className="p-2 rounded-full bg-black/30 hover:bg-black/40 text-white transition-colors">
+                  <button className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors">
                     {isSubscribed ? <Bell size={20} /> : <BellOff size={20} />}
                   </button>
-                  <button className="p-2 rounded-full bg-black/30 hover:bg-black/40 text-white transition-colors">
+                  <button className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors">
                     <Share2 size={20} />
                   </button>
-                  <button className="p-2 rounded-full bg-black/30 hover:bg-black/40 text-white transition-colors">
+                  <button className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors">
                     <MoreHorizontal size={20} />
                   </button>
                 </>

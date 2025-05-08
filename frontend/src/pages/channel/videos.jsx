@@ -148,7 +148,7 @@ export default function ChannelVideos() {
             <Link
               to={`/video/${video._id}`}
               key={video._id}
-              className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1"
+              className="bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1"
             >
               <div className="aspect-video bg-gray-200 relative">
                 <img
@@ -164,13 +164,15 @@ export default function ChannelVideos() {
               </div>
 
               <div className="p-3">
-                <h3 className="font-medium line-clamp-2">{video.title}</h3>
+                <h3 className="font-medium bg-muted line-clamp-2">
+                  {video.title}
+                </h3>
                 <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
                   <div className="flex items-center">
                     <Eye className="w-3 h-3 mr-1" />
                     {video.views?.toLocaleString() || "0"} views
                   </div>
-                  <div className="w-1 h-1 rounded-full bg-gray-300"></div>
+                  <div className="w-1 h-1 rounded-full bg-gray-300 text-muted-foreground"></div>
                   <div className="flex items-center">
                     <Clock className="w-3 h-3 mr-1" />
                     {dayjs(video.createdAt).fromNow()}

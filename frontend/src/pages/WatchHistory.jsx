@@ -65,7 +65,7 @@ const WatchHistory = () => {
         {videos.map((video) => (
           <div
             key={video._id}
-            className="flex items-start bg-white shadow-sm rounded-md overflow-hidden relative hover:shadow-md transition"
+            className="flex items-start bg-card shadow-sm rounded-md overflow-hidden relative hover:shadow-md transition "
           >
             <Link
               to={`/video/${video._id}`}
@@ -82,14 +82,14 @@ const WatchHistory = () => {
               </div>
             </Link>
 
-            <div className="flex-grow px-4 py-2">
+            <div className="flex-grow  px-4 py-2">
               <Link to={`/video/${video._id}`}>
                 <h3 className="text-md font-semibold line-clamp-2 hover:underline">
                   {video.title}
                 </h3>
               </Link>
 
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-200 mt-1">
                 {video.views} views • {dayjs(video.createdAt).fromNow()}
               </p>
 
@@ -103,7 +103,7 @@ const WatchHistory = () => {
                   alt="avatar"
                   className="w-6 h-6 rounded-full"
                 />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-200">
                   {video.owner?.username || "Unknown"}
                 </p>
               </Link>
