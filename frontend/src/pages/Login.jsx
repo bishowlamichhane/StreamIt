@@ -44,8 +44,8 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-8 rounded-xl shadow-lg mt-20 bg-card border border-border">
-      <h2 className="text-3xl font-bold mb-6 text-center text-card-foreground">
+    <div className="max-w-md mx-auto p-4 md:p-8 rounded-xl shadow-lg mt-10 md:mt-20 bg-card border border-border">
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center text-card-foreground">
         Welcome Back! Please Login
       </h2>
 

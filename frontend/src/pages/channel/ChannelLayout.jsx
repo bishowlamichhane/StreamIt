@@ -83,7 +83,7 @@ export default function ChannelLayout() {
     <div className="bg-background transition-colors">
       {/* Cover Image */}
       <div className="relative">
-        <div className="w-full h-48 md:h-64 lg:h-72 overflow-hidden bg-muted">
+        <div className="w-full h-32 md:h-48 lg:h-72 overflow-hidden bg-muted">
           <img
             src={channel.coverImage || "/placeholder.svg?height=400&width=1200"}
             className="w-full h-full object-cover"
@@ -97,13 +97,13 @@ export default function ChannelLayout() {
             <div className="flex-shrink-0 mb-2 md:mb-0 mr-0 md:mr-6">
               <img
                 src={channel.avatar || "/placeholder.svg?height=128&width=128"}
-                className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-background shadow-md object-cover"
+                className="w-20 h-20 md:w-32 md:h-32 rounded-full border-4 border-background shadow-md object-cover"
                 alt={`${channel.fullName}'s avatar`}
               />
             </div>
             <div className="flex-grow mt-4 md:mt-0 text-white">
               <div className="flex flex-col md:flex-row md:items-center gap-2">
-                <h1 className="text-2xl md:text-3xl font-bold">
+                <h1 className="text-xl md:text-3xl font-bold">
                   {channel.fullName}
                 </h1>
                 {channel.verified && (
@@ -154,11 +154,11 @@ export default function ChannelLayout() {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-4 md:mt-0 md:ml-auto">
+            <div className="flex items-center gap-2 mt-4 md:mt-0 md:ml-auto w-full md:w-auto">
               {isOwnChannel ? (
                 <button
                   onClick={() => setShowEditForm((prev) => !prev)}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-1"
+                  className="w-full md:w-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-1 justify-center"
                 >
                   <Edit className="w-4 h-4" />
                   {showEditForm ? "Cancel Edit" : "Edit Profile"}
@@ -167,7 +167,7 @@ export default function ChannelLayout() {
                 <>
                   <button
                     onClick={handleSubscribe}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1 ${
+                    className={`w-full md:w-auto px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1 justify-center ${
                       isSubscribed
                         ? "bg-secondary text-foreground hover:bg-secondary/80"
                         : "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -175,15 +175,21 @@ export default function ChannelLayout() {
                   >
                     {isSubscribed ? "Subscribed" : "Subscribe"}
                   </button>
-                  <button className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors">
-                    {isSubscribed ? <Bell size={20} /> : <BellOff size={20} />}
-                  </button>
-                  <button className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors">
-                    <Share2 size={20} />
-                  </button>
-                  <button className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors">
-                    <MoreHorizontal size={20} />
-                  </button>
+                  <div className="hidden md:flex">
+                    <button className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors">
+                      {isSubscribed ? (
+                        <Bell size={20} />
+                      ) : (
+                        <BellOff size={20} />
+                      )}
+                    </button>
+                    <button className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors">
+                      <Share2 size={20} />
+                    </button>
+                    <button className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors">
+                      <MoreHorizontal size={20} />
+                    </button>
+                  </div>
                 </>
               )}
             </div>

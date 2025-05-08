@@ -220,7 +220,7 @@ const DashboardHome = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredVideos.map((video) => (
               <div
                 key={video._id}
@@ -251,7 +251,7 @@ const DashboardHome = () => {
                     </h3>
                   </Link>
 
-                  <div className="flex items-center justify-between mt-1">
+                  <div className="flex flex-wrap items-center justify-between mt-1 gap-1">
                     <p className="text-sm text-muted-foreground">
                       {video.views} views • {dayjs(video.createdAt).fromNow()}
                     </p>

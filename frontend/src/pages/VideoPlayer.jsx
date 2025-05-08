@@ -13,6 +13,9 @@ import {
   MoreHorizontal,
   MessageSquare,
   Bookmark,
+  Home,
+  Users,
+  Menu,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { Link } from "react-router-dom";
@@ -197,6 +200,7 @@ export default function VideoPlayer() {
 
     setCommentText("");
   };
+
   const fetchComments = async () => {
     try {
       const res = await API.get(`/v1/comments/get/${id}`);
@@ -288,7 +292,7 @@ export default function VideoPlayer() {
         )}
       >
         <Header />
-        <main className="p-6 bg-background flex-1 overflow-auto">
+        <main className="p-4 md:p-6 bg-background flex-1 overflow-auto pb-16 md:pb-6">
           <div className="max-w-[1280px] mx-auto">
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Main Content Column */}
@@ -298,7 +302,7 @@ export default function VideoPlayer() {
                   <video
                     src={video.videoFile}
                     controls
-                    className="w-full h-full object-contain "
+                    className="w-full h-full object-contain"
                     poster={video.thumbnail}
                     autoPlay
                   ></video>
@@ -337,7 +341,7 @@ export default function VideoPlayer() {
                         <span>{video.likeCount?.toLocaleString() || "0"}</span>
                       </button>
                       <div className="h-5 w-px bg-border"></div>
-                      <button className="flex items-center px-4 py-2 gap-1 hover:bg-accent transition-colors  cursor-pointer text-foreground">
+                      <button className="flex items-center px-4 py-2 gap-1 hover:bg-accent transition-colors cursor-pointer text-foreground">
                         <ThumbsDown size={18} />
                       </button>
                     </div>
@@ -364,7 +368,7 @@ export default function VideoPlayer() {
                 </div>
 
                 {/* Channel Info */}
-                <div className="flex items-start justify-between py-4 border-b border-border mb-4 bg-card/50 rounded-lg p-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between py-4 border-b border-border mb-4 bg-card/50 rounded-lg p-4 gap-4">
                   <div className="flex items-start gap-3">
                     <Link
                       to={`/dashboard/channel/${video.owner.username}/${video.owner._id}`}
@@ -403,14 +407,14 @@ export default function VideoPlayer() {
                   {video.owner._id === user?._id ? (
                     <Link
                       to={`/dashboard/channel/${video.owner.username}/${video.owner._id}`}
-                      className="px-4 py-2 rounded-lg font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                      className="px-4 py-2 rounded-lg font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors w-full sm:w-auto text-center"
                     >
                       View Analytics
                     </Link>
                   ) : (
                     <button
                       onClick={handleSubscribe}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer w-full sm:w-auto ${
                         isSubscribed
                           ? "bg-muted text-foreground hover:bg-accent"
                           : "bg-destructive text-white hover:bg-destructive/90"
@@ -561,6 +565,50 @@ export default function VideoPlayer() {
             </div>
           </div>
         </main>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-30">
+        <div className="flex justify-around items-center h-16">
+          <Link
+            to="/"
+            className="flex flex-col items-center justify-center text-sidebar-foreground p-2"
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-xs mt-1">Home</span>
+          </Link>
+          <button
+            onClick={handleLikeToggle}
+            className="flex flex-col items-center justify-center text-sidebar-foreground p-2"
+          >
+            <ThumbsUp
+              className={`h-5 w-5 ${video.isLikedByUser ? "text-primary fill-primary" : ""}`}
+            />
+            <span className="text-xs mt-1">Like</span>
+          </button>
+          <button
+            onClick={handleSubscribe}
+            className="flex flex-col items-center justify-center text-sidebar-foreground p-2"
+          >
+            <Users
+              className={`h-5 w-5 ${isSubscribed ? "text-primary" : ""}`}
+            />
+            <span className="text-xs mt-1">
+              {isSubscribed ? "Subbed" : "Subscribe"}
+            </span>
+          </button>
+          <button className="flex flex-col items-center justify-center text-sidebar-foreground p-2">
+            <Share2 className="h-5 w-5" />
+            <span className="text-xs mt-1">Share</span>
+          </button>
+          <button
+            onClick={toggleSidebar}
+            className="flex flex-col items-center justify-center text-sidebar-foreground p-2"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="text-xs mt-1">Menu</span>
+          </button>
+        </div>
       </div>
     </div>
   );

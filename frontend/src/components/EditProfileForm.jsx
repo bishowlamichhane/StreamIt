@@ -110,7 +110,7 @@ export default function EditProfileForm({ currentData, onSuccess }) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Avatar
             </label>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {avatarPreview && (
                 <div className="relative w-16 h-16 rounded-full overflow-hidden">
                   <img
@@ -138,7 +138,7 @@ export default function EditProfileForm({ currentData, onSuccess }) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Cover Image
             </label>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {coverPreview && (
                 <div className="relative w-24 h-12 rounded overflow-hidden">
                   <img

@@ -180,7 +180,7 @@ const UploadModal = () => {
         </div>
 
         {/* Progress Steps */}
-        <div className="px-6 pt-4">
+        <div className="px-4 md:px-6 pt-4">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
               <div
@@ -195,7 +195,7 @@ const UploadModal = () => {
               </div>
               <div
                 className={clsx(
-                  "h-1 w-12",
+                  "h-1 w-6 md:w-12",
                   currentStep >= 2 ? "bg-primary" : "bg-muted"
                 )}
               ></div>
@@ -211,7 +211,7 @@ const UploadModal = () => {
               </div>
               <div
                 className={clsx(
-                  "h-1 w-12",
+                  "h-1 w-6 md:w-12",
                   currentStep >= 3 ? "bg-primary" : "bg-muted"
                 )}
               ></div>
@@ -233,7 +233,7 @@ const UploadModal = () => {
         </div>
 
         <div className="flex flex-col flex-1 overflow-hidden">
-          <div className="p-6 overflow-y-auto flex-1">
+          <div className="p-4 md:p-6 overflow-y-auto flex-1">
             {/* Step 1: Select Video */}
             {currentStep === 1 && (
               <div className="space-y-4">
@@ -247,10 +247,10 @@ const UploadModal = () => {
 
                 {!videoData.video ? (
                   <div
-                    className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="border-2 border-dashed border-border rounded-lg p-6 md:p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <Video className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                    <Video className="w-10 h-10 md:w-12 md:h-12 mx-auto text-muted-foreground mb-4" />
                     <p className="font-medium text-card-foreground">
                       Click to select a video
                     </p>
@@ -266,7 +266,7 @@ const UploadModal = () => {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center">
                         <Video className="w-5 h-5 text-primary mr-2" />
-                        <span className="font-medium truncate max-w-[300px] text-card-foreground">
+                        <span className="font-medium truncate max-w-[200px] md:max-w-[300px] text-card-foreground">
                           {videoData.video.name}
                         </span>
                       </div>
@@ -384,10 +384,10 @@ const UploadModal = () => {
 
                 {!videoData.thumbnail ? (
                   <div
-                    className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="border-2 border-dashed border-border rounded-lg p-6 md:p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => thumbnailInputRef.current?.click()}
                   >
-                    <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                    <ImageIcon className="w-10 h-10 md:w-12 md:h-12 mx-auto text-muted-foreground mb-4" />
                     <p className="font-medium text-card-foreground">
                       Click to select a thumbnail
                     </p>
@@ -403,7 +403,7 @@ const UploadModal = () => {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center">
                         <ImageIcon className="w-5 h-5 text-primary mr-2" />
-                        <span className="font-medium truncate max-w-[300px] text-card-foreground">
+                        <span className="font-medium truncate max-w-[200px] md:max-w-[300px] text-card-foreground">
                           {videoData.thumbnail.name}
                         </span>
                       </div>

@@ -83,13 +83,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       <aside
         className={clsx(
           "bg-sidebar text-sidebar-foreground border-r border-sidebar-border h-screen transition-all duration-300 fixed z-40 top-0 left-0 flex flex-col",
-          isOpen ? "w-64" : "w-16"
+          isOpen ? "w-64" : "w-16",
+          !isOpen && "transform -translate-x-full md:translate-x-0" // Hide on mobile when closed, show on desktop
         )}
       >
         <div className="flex items-center h-16 px-4 border-b border-sidebar-border justify-end">
           {isOpen ? (
             <>
-              <Link to="/" className="font-bold text-xl"></Link>
               <button
                 onClick={toggleSidebar}
                 className="p-2 rounded-full hover:bg-sidebar-accent text-sidebar-foreground transition-colors cursor-pointer"
