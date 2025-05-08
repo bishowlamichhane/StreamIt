@@ -55,8 +55,20 @@ const UploadModal = () => {
     }
   };
 
+  const nextStep = () => {
+    if (currentStep === 1 && !videoData.video) {
+      toast.error("Please select a video file");
+      return;
+    }
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  const prevStep = () => {
+    setCurrentStep((prev) => prev - 1);
+  };
+
   const handleUpload = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     if (!videoData.video || !videoData.title || !videoData.category) {
       toast.error("Please fill all required fields");
@@ -135,18 +147,6 @@ const UploadModal = () => {
     }
     resetForm();
     closeModal();
-  };
-
-  const nextStep = () => {
-    if (currentStep === 1 && !videoData.video) {
-      toast.error("Please select a video file");
-      return;
-    }
-    setCurrentStep((prev) => prev + 1);
-  };
-
-  const prevStep = () => {
-    setCurrentStep((prev) => prev - 1);
   };
 
   if (!isOpen) return null;
@@ -232,10 +232,7 @@ const UploadModal = () => {
           </div>
         </div>
 
-        <form
-          onSubmit={handleUpload}
-          className="flex flex-col flex-1 overflow-hidden"
-        >
+        <div className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto flex-1">
             {/* Step 1: Select Video */}
             {currentStep === 1 && (
@@ -488,13 +485,15 @@ const UploadModal = () => {
 
           {/* Footer */}
           <div className="p-4 border-t border-border flex justify-between bg-card sticky bottom-0">
-            {currentStep > 1 && !uploading ? (
-              <Button type="button" variant="outline" onClick={prevStep}>
-                Back
-              </Button>
-            ) : (
-              <div></div> // Empty div to maintain layout
-            )}
+            <div>
+              {currentStep > 1 && !uploading ? (
+                <Button type="button" variant="outline" onClick={prevStep}>
+                  Back
+                </Button>
+              ) : (
+                <div></div> // Empty div to maintain layout
+              )}
+            </div>
 
             <div>
               {currentStep < 3 ? (
@@ -507,7 +506,8 @@ const UploadModal = () => {
                 </Button>
               ) : (
                 <Button
-                  type="submit"
+                  type="button"
+                  onClick={handleUpload}
                   disabled={
                     uploading ||
                     !videoData.title ||
@@ -535,7 +535,7 @@ const UploadModal = () => {
               )}
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

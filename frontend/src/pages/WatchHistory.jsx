@@ -89,7 +89,7 @@ const WatchHistory = () => {
                 </h3>
               </Link>
 
-              <p className="text-sm text-gray-200 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {video.views} views • {dayjs(video.createdAt).fromNow()}
               </p>
 
@@ -103,7 +103,7 @@ const WatchHistory = () => {
                   alt="avatar"
                   className="w-6 h-6 rounded-full"
                 />
-                <p className="text-sm text-gray-200">
+                <p className="text-sm text-muted-foreground">
                   {video.owner?.username || "Unknown"}
                 </p>
               </Link>

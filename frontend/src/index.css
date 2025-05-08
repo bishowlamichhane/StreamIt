@@ -79,7 +79,7 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Keep the light theme class for future use */
+/* Light theme class */
 .light {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -191,4 +191,10 @@ textarea::placeholder {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
+}
+
+/* Theme transition */
+:root,
+.light {
+  transition: all 0.3s ease;
 }

@@ -2,13 +2,14 @@
 
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Bell, Sun, Upload } from "lucide-react";
+import { Search, Bell, Sun, Moon, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
 import { clsx } from "@/lib/utils";
 import { useUploadModal } from "../store/modalStore";
+import { useTheme } from "./ThemeProvider";
 
 export default function Header() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -16,6 +17,7 @@ export default function Header() {
   const navigate = useNavigate();
   const userNameElement = useRef(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const searchUser = async (e) => {
     e.preventDefault();
@@ -69,8 +71,13 @@ export default function Header() {
         <button
           className="p-2 rounded-full hover:bg-muted transition-colors cursor-pointer"
           aria-label="Toggle theme"
+          onClick={toggleTheme}
         >
-          <Sun className="h-5 w-5 text-foreground" />
+          {theme === "dark" ? (
+            <Sun className="h-5 w-5 text-foreground" />
+          ) : (
+            <Moon className="h-5 w-5 text-foreground" />
+          )}
         </button>
 
         {isLoggedIn ? (
