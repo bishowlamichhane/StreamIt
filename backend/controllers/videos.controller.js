@@ -266,6 +266,7 @@ const getRandomVideos=asyncHandler(async(req,res)=>{
                 duration:1,
                 views:1,
                 createdAt:1,
+                category:1,
                 owner:1
             }
         }

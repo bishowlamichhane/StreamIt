@@ -57,6 +57,7 @@ const DashboardHome = () => {
         const res = await API.get("/v1/videos/random-videos");
         const fetchedVideos = res.data.data || [];
         setVideos(fetchedVideos);
+
         setFilteredVideos(fetchedVideos);
       } catch (err) {
         console.log("Failed to load videos ", err);
@@ -77,7 +78,7 @@ const DashboardHome = () => {
       // Otherwise, filter by the selected category
       setSelectedCategory(categoryName);
       const filtered = videos.filter(
-        (video) => video?.category?.toLowerCase() === categoryName.toLowerCase()
+        (video) => video?.category == categoryName
       );
       setFilteredVideos(filtered);
 
@@ -185,7 +186,7 @@ const DashboardHome = () => {
             {selectedCategory && (
               <button
                 onClick={clearCategoryFilter}
-                className="ml-3 flex items-center text-sm bg-muted px-2 py-1 rounded-full hover:bg-accent transition-colors"
+                className="ml-3 flex items-center text-sm bg-muted px-2 py-1 rounded-full hover:bg-accent transition-colors cursor-pointer"
               >
                 <X className="h-3 w-3 mr-1" />
                 Clear filter

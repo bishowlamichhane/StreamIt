@@ -18,6 +18,7 @@ import { Link, useLocation } from "react-router-dom";
 import { clsx } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
@@ -25,18 +26,38 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const { toast } = useToast();
+
   const handleLogout = async () => {
     await logout(); // this is logoutFromServer
     navigate("/login");
   };
 
+  // Replace the menuItems array with this updated version that includes a better message for the Community tab
   const menuItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Compass, label: "Explore", path: "#" },
     {
       icon: Trending,
       label: "Community",
-      path: `/community-page/${user?._id}`,
+      path: isLoggedIn ? `/community-page/${user?._id}` : "/login",
+      onClick: !isLoggedIn
+        ? (e) => {
+            e.preventDefault();
+            // Show a more prominent message
+            toast.error("Please login to access community features", {
+              description:
+                "Community features are only available to logged-in users.",
+              duration: 5000,
+            });
+            navigate("/login", {
+              state: {
+                from: "community",
+                message: "Please login to access community features",
+              },
+            });
+          }
+        : undefined,
     },
     { icon: Library, label: "Library", path: "#" },
     { icon: History, label: "History", path: "/dashboard/history" },
@@ -68,9 +89,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <div className="flex items-center h-16 px-4 border-b border-sidebar-border justify-end">
           {isOpen ? (
             <>
+              <Link to="/" className="font-bold text-xl"></Link>
               <button
                 onClick={toggleSidebar}
-                className="p-2 rounded-full hover:bg-sidebar-accent text-sidebar-foreground transition-colors cursor-pointer "
+                className="p-2 rounded-full hover:bg-sidebar-accent text-sidebar-foreground transition-colors cursor-pointer"
                 aria-label="Collapse sidebar"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -93,6 +115,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <Link
                 key={item.label}
                 to={item.path}
+                onClick={item.onClick}
                 className={clsx(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
                   location.pathname === item.path

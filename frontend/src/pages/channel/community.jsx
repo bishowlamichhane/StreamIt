@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { clsx } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthStore } from "@/store/authStore";
 
 export default function ChannelCommunity() {
   const { username } = useParams();
@@ -23,6 +24,7 @@ export default function ChannelCommunity() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const toast = useToast();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   useEffect(() => {
     const fetchCommunity = async () => {
@@ -43,10 +45,20 @@ export default function ChannelCommunity() {
   }, [id]);
 
   const handleCreateCommunity = () => {
+    if (!isLoggedIn) {
+      toast.error("Please login to access community features");
+      navigate("/login");
+      return;
+    }
     navigate(`/create-community/${id}`);
   };
 
   const handleExploreCommunity = () => {
+    if (!isLoggedIn) {
+      toast.error("Please login to access community features");
+      navigate("/login");
+      return;
+    }
     navigate(`/community-page/${id}`);
   };
 

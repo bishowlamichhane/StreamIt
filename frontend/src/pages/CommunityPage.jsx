@@ -39,6 +39,7 @@ import "../styles/typing-indicator.css";
 
 dayjs.extend(relativeTime);
 
+// Add authentication check at the beginning of the component
 const CommunityPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeChannel, setActiveChannel] = useState(null);
@@ -54,19 +55,26 @@ const CommunityPage = () => {
   const [userVideos, setUserVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const messagesEndRef = useRef(null);
-  // Add debounced typing indicator in the component
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef(null);
-  // New state for community creation
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [communityName, setCommunityName] = useState("");
   const [communityDescription, setCommunityDescription] = useState("");
   const [creatingCommunity, setCreatingCommunity] = useState(false);
 
   const user = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const navigate = useNavigate();
   const { id } = useParams();
   const toast = useToast();
+
+  // Add authentication check
+  useEffect(() => {
+    if (!isLoggedIn) {
+      toast.error("Please login to access community features");
+      navigate("/login");
+    }
+  }, [isLoggedIn, navigate, toast]);
 
   const {
     channels,
@@ -581,7 +589,7 @@ const CommunityPage = () => {
                         className={clsx(
                           "w-full flex items-center p-2 rounded text-sm group cursor-pointer",
                           activeChannel === channel._id
-                            ? "bg-sidebar-accent text-sidebar-primary"
+                            ? "bg-sidebar-accent "
                             : "text-sidebar-foreground hover:bg-sidebar-accent/50 "
                         )}
                         onClick={() => handleChannelChange(channel._id)}
@@ -615,7 +623,7 @@ const CommunityPage = () => {
                         className={clsx(
                           "w-full flex items-center p-2 rounded text-sm group cursor-pointer",
                           activeChannel === channel._id
-                            ? "bg-sidebar-accent text-sidebar-primary"
+                            ? "bg-sidebar-accent "
                             : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                         )}
                         onClick={() => handleChannelChange(channel._id)}
@@ -655,7 +663,7 @@ const CommunityPage = () => {
                         className={clsx(
                           "w-full flex items-center p-2 rounded text-sm group",
                           activeChannel === channel._id
-                            ? "bg-sidebar-accent text-sidebar-primary"
+                            ? "bg-sidebar-accent "
                             : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                         )}
                         onClick={() => handleChannelChange(channel._id)}

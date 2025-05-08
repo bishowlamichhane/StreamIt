@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, NavLink, Outlet } from "react-router-dom";
+import { useParams, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "@/api";
 import {
@@ -16,16 +16,20 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import EditProfileForm from "@/components/EditProfileForm";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ChannelLayout() {
   const { username } = useParams();
+  const navigate = useNavigate();
   const [channel, setChannel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [owner, setOwner] = useState(false);
   const authUser = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isOwnChannel = authUser?.username === username;
   const [showEditForm, setShowEditForm] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     const fetchChannel = async () => {
@@ -197,7 +201,17 @@ export default function ChannelLayout() {
             <NavLink to="playlists" className={tabClass}>
               Playlists
             </NavLink>
-            <NavLink to="community" className={tabClass}>
+            <NavLink
+              to="community"
+              className={tabClass}
+              onClick={(e) => {
+                if (!isLoggedIn) {
+                  e.preventDefault();
+                  toast.error("Please login to access community features");
+                  navigate("/login");
+                }
+              }}
+            >
               Community
             </NavLink>
             <NavLink to="about" className={tabClass}>

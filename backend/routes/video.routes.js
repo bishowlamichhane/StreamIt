@@ -36,7 +36,7 @@ videoRouter.route('/v/:videoId').get(getVideoId)
 videoRouter.route('/delete/:videoId').delete(deleteVideo)
 
 
-videoRouter.route('/get-videos/:id').get(verifyJWT,getAllVideos)
+videoRouter.route('/get-videos/:id').get(getAllVideos)
 
 videoRouter.route('/publish/:videoId').patch(togglePublishStatus)
 videoRouter.route("/random-videos").get( getRandomVideos);
