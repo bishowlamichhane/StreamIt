@@ -25,6 +25,8 @@ import {
   PlusCircle,
   UserPlus,
   MessageSquare,
+  X,
+  Menu,
 } from "lucide-react";
 import API from "../api";
 import dayjs from "dayjs";
@@ -57,10 +59,6 @@ const CommunityPage = () => {
   const messagesEndRef = useRef(null);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [communityName, setCommunityName] = useState("");
-  const [communityDescription, setCommunityDescription] = useState("");
-  const [creatingCommunity, setCreatingCommunity] = useState(false);
 
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -138,6 +136,7 @@ const CommunityPage = () => {
         // Fetch community data
         const communityRes = await API.get(`/v1/community/get-community/${id}`);
         const fetchedCommunity = communityRes.data.data;
+
         setCommunity(fetchedCommunity || null);
 
         // Fetch channels
@@ -151,6 +150,7 @@ const CommunityPage = () => {
 
         setLoading(false);
       } catch (err) {
+        navigate("/community-register");
         console.error("Error fetching community data", err);
         setLoading(false);
       }
@@ -305,46 +305,6 @@ const CommunityPage = () => {
     };
   }, []);
 
-  // Handle community creation form submission
-  const handleCreateCommunity = async (e) => {
-    e.preventDefault();
-
-    if (!communityName.trim()) {
-      toast.error("Community name is required");
-      return;
-    }
-
-    setCreatingCommunity(true);
-
-    try {
-      // This is a placeholder for the API call that the user will implement
-      // await API.post("/v1/community/create", {
-      //   name: communityName,
-      //   description: communityDescription,
-      //   userId: user?._id
-      // })
-
-      // For now, just show a success message
-      toast.success("Community created successfully!");
-
-      // Reset form
-      setCommunityName("");
-      setCommunityDescription("");
-      setShowCreateForm(false);
-
-      // Refresh the page to show the new community
-      // In a real implementation, you might want to fetch the new community data instead
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } catch (error) {
-      toast.error("Failed to create community");
-      console.error("Error creating community:", error);
-    } finally {
-      setCreatingCommunity(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex h-screen bg-background text-foreground">
@@ -367,179 +327,6 @@ const CommunityPage = () => {
     );
   }
 
-  // No community found UI
-  if (!community) {
-    return (
-      <div className="flex h-screen bg-background text-foreground">
-        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-        <div
-          className={clsx(
-            "flex flex-col flex-1 w-full transition-all duration-300",
-            isSidebarOpen ? "md:ml-64" : "md:ml-16"
-          )}
-        >
-          <Header />
-          <main className="flex-1 p-6 md:p-8 overflow-auto">
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                {!showCreateForm ? (
-                  <div className="p-8 text-center">
-                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Users className="w-10 h-10 text-primary" />
-                    </div>
-                    <h2 className="text-2xl font-bold mb-2">
-                      No Community Found
-                    </h2>
-                    <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                      You don't have a community yet. Create your own community
-                      to connect with your audience, host discussions, and share
-                      content in real-time.
-                    </p>
-                    <button
-                      onClick={() => setShowCreateForm(true)}
-                      className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-                    >
-                      <Plus className="w-5 h-5 mr-2" />
-                      Create Your Community
-                    </button>
-                  </div>
-                ) : (
-                  <div className="p-8">
-                    <div className="flex items-center mb-6">
-                      <button
-                        onClick={() => setShowCreateForm(false)}
-                        className="mr-4 p-2 rounded-full hover:bg-muted transition-colors"
-                      >
-                        <ChevronDown className="w-5 h-5 transform rotate-90" />
-                      </button>
-                      <h2 className="text-2xl font-bold">
-                        Create Your Community
-                      </h2>
-                    </div>
-
-                    <form
-                      onSubmit={handleCreateCommunity}
-                      className="space-y-6"
-                    >
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="community-name"
-                          className="block text-sm font-medium"
-                        >
-                          Community Name{" "}
-                          <span className="text-destructive">*</span>
-                        </label>
-                        <input
-                          id="community-name"
-                          type="text"
-                          value={communityName}
-                          onChange={(e) => setCommunityName(e.target.value)}
-                          placeholder="Enter community name"
-                          className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
-                          required
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="community-description"
-                          className="block text-sm font-medium"
-                        >
-                          Description{" "}
-                          <span className="text-muted-foreground">
-                            (optional)
-                          </span>
-                        </label>
-                        <textarea
-                          id="community-description"
-                          value={communityDescription}
-                          onChange={(e) =>
-                            setCommunityDescription(e.target.value)
-                          }
-                          placeholder="Describe what your community is about"
-                          className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px] text-foreground"
-                        />
-                      </div>
-
-                      <div className="pt-4 flex justify-end gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setShowCreateForm(false)}
-                          className="px-5 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={creatingCommunity || !communityName.trim()}
-                          className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center"
-                        >
-                          {creatingCommunity ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2"></div>
-                              Creating...
-                            </>
-                          ) : (
-                            <>Create Community</>
-                          )}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-
-                {/* Community benefits section */}
-                <div className="bg-muted/50 border-t border-border p-8">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Community Features
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="flex items-start">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
-                        <MessageSquare className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium mb-1">Real-time Chat</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Connect with your audience through text, voice, and
-                          video channels
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
-                        <Video className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium mb-1">Video Channels</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Share and discuss your videos with community members
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
-                        <UserPlus className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium mb-1">Grow Your Audience</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Build a dedicated space for your fans and followers
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="flex h-screen bg-background text-foreground">
@@ -552,9 +339,15 @@ const CommunityPage = () => {
         >
           <Header />
 
-          <main className="flex-1 flex overflow-hidden">
+          <main className="flex-1 flex overflow-hidden relative">
             {/* Community Channels Sidebar */}
-            <div className="w-60 bg-sidebar border-r border-sidebar-border flex-shrink-0 flex flex-col">
+            <div
+              className={clsx(
+                "w-full sm:w-60 md:w-64 bg-sidebar border-r border-sidebar-border flex-shrink-0 flex flex-col overflow-hidden",
+                "absolute inset-y-0 left-0 z-20 transition-transform duration-300 md:relative",
+                !isSidebarOpen && "transform -translate-x-full md:translate-x-0"
+              )}
+            >
               <div className="p-4 border-b border-sidebar-border">
                 <h2 className="font-bold text-lg flex items-center justify-between">
                   <span>{community?.name || "Community"}</span>
@@ -567,7 +360,7 @@ const CommunityPage = () => {
 
               {/* Channel Categories */}
               <div className="flex-1 overflow-y-auto">
-                <div className="p-2">
+                <div className="p-2 space-y-2">
                   {/* Text Channels */}
                   <div className="flex items-center justify-between p-2 text-sidebar-foreground/70 hover:text-sidebar-foreground cursor-pointer">
                     <div className="flex items-center">
@@ -744,13 +537,27 @@ const CommunityPage = () => {
                   </div>
                 </div>
               )}
+
+              {/* Add a close button for mobile */}
+              <button
+                onClick={toggleSidebar}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-sidebar-accent text-sidebar-foreground md:hidden"
+              >
+                <X size={18} />
+              </button>
             </div>
 
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col bg-background">
+            <div className="flex-1 flex flex-col bg-background min-w-0">
               {/* Channel Header */}
               <div className="h-12 border-b border-border flex items-center px-4 justify-between bg-card">
                 <div className="flex items-center">
+                  <button
+                    onClick={toggleSidebar}
+                    className="mr-2 p-1.5 rounded-md hover:bg-accent text-muted-foreground md:hidden"
+                  >
+                    <Menu size={18} />
+                  </button>
                   {currentChannel?.type === "text" && (
                     <Hash size={18} className="mr-2 text-muted-foreground" />
                   )}
@@ -760,7 +567,7 @@ const CommunityPage = () => {
                   {currentChannel?.type === "voice" && (
                     <Volume2 size={18} className="mr-2 text-muted-foreground" />
                   )}
-                  <h3 className="font-medium">
+                  <h3 className="font-medium truncate">
                     {currentChannel?.linkedVideo?.title ||
                       currentChannel?.name ||
                       "channel"}
@@ -782,7 +589,7 @@ const CommunityPage = () => {
               </div>
 
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-2 sm:p-4">
                 {loading || messageLoading ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin"></div>
@@ -798,9 +605,9 @@ const CommunityPage = () => {
                             "/placeholder.svg"
                           }
                           alt={message.sender?.username || "User"}
-                          className="w-10 h-10 rounded-full mr-3 mt-1"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-2 sm:mr-3 mt-1 flex-shrink-0"
                         />
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center">
                             <span className="font-medium text-foreground">
                               {message.sender?.username || "User"}
@@ -868,10 +675,10 @@ const CommunityPage = () => {
               {!isVoiceChannel && (
                 <div className="border-t border-border">
                   <TypingIndicator channelId={activeChannel} />
-                  <div className="p-4">
+                  <div className="p-2 sm:p-4">
                     <form
                       onSubmit={handleSendMessage}
-                      className="flex items-center"
+                      className="flex items-center gap-2"
                     >
                       <input
                         type="text"
@@ -917,11 +724,22 @@ const CommunityPage = () => {
 
             {/* Members Sidebar */}
             {showMembers && (
-              <div className="w-60 bg-sidebar border-l border-sidebar-border flex-shrink-0 overflow-hidden flex flex-col">
-                <div className="p-4 border-b border-sidebar-border">
+              <div
+                className={clsx(
+                  "w-full sm:w-60 md:w-64 bg-sidebar border-l border-sidebar-border flex-shrink-0 overflow-hidden flex flex-col absolute right-0 top-0 bottom-0 z-10 md:relative",
+                  "md:transform-none"
+                )}
+              >
+                <div className="p-4 border-b border-sidebar-border flex justify-between items-center">
                   <h3 className="font-medium text-sm uppercase text-sidebar-foreground/70">
                     Online — {onlineUsers.length}
                   </h3>
+                  <button
+                    onClick={() => setShowMembers(false)}
+                    className="md:hidden p-1 rounded-full hover:bg-sidebar-accent text-sidebar-foreground"
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
@@ -929,13 +747,24 @@ const CommunityPage = () => {
                 </div>
               </div>
             )}
+
+            {/* Overlay for mobile when sidebar is open */}
+            {(isSidebarOpen || showMembers) && (
+              <div
+                className="md:hidden fixed inset-0 bg-black/50 z-10"
+                onClick={() => {
+                  setIsSidebarOpen(false);
+                  setShowMembers(false);
+                }}
+              ></div>
+            )}
           </main>
         </div>
 
         {/* Add Video Channel Modal */}
         {showAddVideoModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background rounded-lg w-full max-w-md p-6">
+            <div className="bg-background rounded-lg w-full max-w-md p-4 sm:p-6 mx-4">
               <h3 className="text-lg font-medium mb-4">Add Video Channel</h3>
 
               <div className="mb-4">

@@ -41,23 +41,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       icon: Trending,
       label: "Community",
       path: isLoggedIn ? `/community-page/${user?._id}` : "/login",
-      onClick: !isLoggedIn
-        ? (e) => {
-            e.preventDefault();
-            // Show a more prominent message
-            toast.error("Please login to access community features", {
-              description:
-                "Community features are only available to logged-in users.",
-              duration: 5000,
-            });
-            navigate("/login", {
-              state: {
-                from: "community",
-                message: "Please login to access community features",
-              },
-            });
-          }
-        : undefined,
     },
     { icon: Library, label: "Library", path: "#" },
     { icon: History, label: "History", path: "/dashboard/history" },

@@ -21,6 +21,7 @@ import WatchHistory from "./pages/WatchHistory.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
 import LikedVideos from "./pages/LikedVideos.jsx";
 import CommunityPage from "./pages/CommunityPage.jsx";
+import CommunityRegisterPage from "./pages/CommunityRegisterPage.jsx";
 
 const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
       {
         path: "community-page/:id",
         element: <CommunityPage />,
+      },
+      {
+        path: "community-register",
+        element: <CommunityRegisterPage />,
       },
 
       {
