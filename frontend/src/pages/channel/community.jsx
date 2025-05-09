@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Plus,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { clsx } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -30,18 +31,37 @@ export default function ChannelCommunity() {
     const fetchCommunity = async () => {
       try {
         setLoading(true);
+        setError(null); // Reset error state before fetching
+
         const res = await API.get(`/v1/community/get-community/${id}`);
-        setCommunity(res.data.data || null);
-        setError(null);
+
+        // Check if the response contains valid community data
+        if (
+          res.data &&
+          res.data.data &&
+          Object.keys(res.data.data).length > 0
+        ) {
+          setCommunity(res.data.data);
+        } else {
+          // Explicitly set community to null if no data is returned
+          setCommunity(null);
+        }
       } catch (err) {
         console.error("Error fetching community", err);
+        // Set community to null on error to show the create button
+        setCommunity(null);
         setError("Failed to load community data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCommunity();
+    if (id) {
+      fetchCommunity();
+    } else {
+      setLoading(false);
+      setCommunity(null);
+    }
   }, [id]);
 
   const handleCreateCommunity = () => {
@@ -50,7 +70,8 @@ export default function ChannelCommunity() {
       navigate("/login");
       return;
     }
-    navigate(`/create-community/${id}`);
+    // Navigate to the community register page
+    navigate("/community-register");
   };
 
   const handleExploreCommunity = () => {
@@ -73,20 +94,42 @@ export default function ChannelCommunity() {
     );
   }
 
+  // Show error state with option to create community
   if (error) {
     return (
       <div className="bg-card rounded-lg shadow-md p-6 w-full border border-border">
-        <div className="flex flex-col items-center justify-center h-48 space-y-4">
-          <div className="text-destructive text-center">
-            <p className="text-lg font-medium">Something went wrong</p>
-            <p className="text-sm text-muted-foreground">{error}</p>
+        <h2 className="text-xl font-bold mb-4 border-b pb-2 border-border">
+          Community
+        </h2>
+
+        <div className="flex flex-col items-center justify-center py-6 space-y-4">
+          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center">
+            <AlertCircle className="w-8 h-8 text-destructive" />
           </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Try Again
-          </button>
+
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-destructive">
+              Something went wrong
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 mt-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-muted hover:bg-muted/80 rounded-md transition-colors"
+            >
+              Try Again
+            </button>
+
+            <button
+              onClick={handleCreateCommunity}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create New Community</span>
+            </button>
+          </div>
         </div>
       </div>
     );

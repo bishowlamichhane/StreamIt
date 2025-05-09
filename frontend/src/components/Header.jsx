@@ -15,13 +15,13 @@ export default function Header() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
-  const userNameElement = useRef(null);
+  const [searchValue, setSearchValue] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   const searchUser = async (e) => {
     e.preventDefault();
-    const username = userNameElement.current.value.trim();
+    const username = searchValue.trim();
     if (!username) return;
 
     navigate(`/dashboard/search?query=${username}`);
@@ -54,7 +54,7 @@ export default function Header() {
               type="text"
               placeholder="Search channels or videos..."
               className="w-full pl-10 pr-12 py-2 bg-secondary border-none focus:ring-2 focus:ring-primary text-foreground"
-              ref={userNameElement}
+              onChange={(e) => setSearchValue(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
             />
@@ -156,7 +156,7 @@ export default function Header() {
               type="text"
               placeholder="Search channels or videos..."
               className="w-full pl-10 pr-12 py-2 bg-secondary border-none focus:ring-2 focus:ring-primary text-foreground"
-              ref={userNameElement}
+              onChange={(e) => setSearchValue(e.target.value)}
               autoFocus
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
