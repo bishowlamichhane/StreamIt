@@ -37,6 +37,7 @@ import subsRouter from "./routes/subscription.routes.js"
 import likeRouter from "./routes/like.routes.js"
 import commentRouter from "./routes/comment.routes.js";
 import commRouter from "./routes/community.routes.js";
+import playlistRouter from "./routes/playlist.routes.js";
 
 
 app.use('/api/v1/users',router)
@@ -45,6 +46,7 @@ app.use('/api/v1/subs',subsRouter)
 app.use('/api/v1/likes',likeRouter)
 app.use('/api/v1/comments',commentRouter)
 app.use('/api/v1/community',commRouter)
+app.use('/api/v1/playlists',playlistRouter)
 
 app.use(express.static(path.join(_dirname,"/frontend/dist")));
 
