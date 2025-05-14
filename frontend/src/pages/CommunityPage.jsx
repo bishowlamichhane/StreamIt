@@ -122,6 +122,30 @@ const CommunityPage = () => {
       socket.emit("join_community", id);
     }
 
+    // Add these new socket listeners for voice channel participants
+    socket.on("voice_user_joined", ({ channelId, user: joinedUser }) => {
+      if (channelId === activeChannel) {
+        setConnectedUsers((prev) => {
+          if (!prev.some((u) => u._id === joinedUser._id)) {
+            return [...prev, joinedUser];
+          }
+          return prev;
+        });
+      }
+    });
+
+    socket.on("voice_user_left", ({ channelId, userId }) => {
+      if (channelId === activeChannel) {
+        setConnectedUsers((prev) => prev.filter((u) => u._id !== userId));
+      }
+    });
+
+    socket.on("voice_users_list", ({ channelId, users }) => {
+      if (channelId === activeChannel) {
+        setConnectedUsers(users);
+      }
+    });
+
     // Debug socket connection status
     console.log(
       "Socket connection status:",
@@ -133,8 +157,12 @@ const CommunityPage = () => {
       if (id) {
         socket.emit("leave_community", id);
       }
+      // Clean up voice channel socket listeners
+      socket.off("voice_user_joined");
+      socket.off("voice_user_left");
+      socket.off("voice_users_list");
     };
-  }, [id, initSocketListeners, cleanupSocketListeners, user]);
+  }, [id, initSocketListeners, cleanupSocketListeners, user, activeChannel]);
 
   // Fetch community data and channels
   useEffect(() => {
@@ -263,6 +291,20 @@ const CommunityPage = () => {
     if (isVoiceConnected) {
       handleLeaveVoice();
     }
+
+    // Reset connected users list when changing channels
+    setConnectedUsers([]);
+
+    // If the new channel is a voice channel, request the current users list
+    const newChannel = [
+      ...channels.text,
+      ...channels.video,
+      ...channels.voice,
+    ].find((channel) => channel?._id === channelId);
+
+    if (newChannel?.type === "voice") {
+      socket.emit("get_voice_users", { channelId });
+    }
   };
 
   const handleJoinVoice = async () => {
@@ -277,6 +319,9 @@ const CommunityPage = () => {
         }
         return prev;
       });
+
+      // Request the current list of users in the voice channel
+      socket.emit("get_voice_users", { channelId: activeChannel });
 
       toast.success("Joined voice channel");
     } catch (err) {
@@ -854,6 +899,7 @@ const CommunityPage = () => {
                             message.sender?.avatar ||
                             "/placeholder.svg?height=40&width=40" ||
                             "/placeholder.svg" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg"
                           }
                           alt={message.sender?.username || "User"}
@@ -1149,6 +1195,7 @@ const CommunityPage = () => {
                           src={
                             video.thumbnail ||
                             "/placeholder.svg?height=40&width=60" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg"
                           }
