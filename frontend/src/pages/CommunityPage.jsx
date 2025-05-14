@@ -124,6 +124,12 @@ const CommunityPage = () => {
 
     // Add these new socket listeners for voice channel participants
     socket.on("voice_user_joined", ({ channelId, user: joinedUser }) => {
+      console.log(
+        "User joined voice channel:",
+        joinedUser,
+        "in channel:",
+        channelId
+      );
       if (channelId === activeChannel) {
         setConnectedUsers((prev) => {
           if (!prev.some((u) => u._id === joinedUser._id)) {
@@ -135,6 +141,12 @@ const CommunityPage = () => {
     });
 
     socket.on("voice_user_left", ({ channelId, userId }) => {
+      console.log(
+        "User left voice channel:",
+        userId,
+        "from channel:",
+        channelId
+      );
       if (channelId === activeChannel) {
         setConnectedUsers((prev) => prev.filter((u) => u._id !== userId));
       }
@@ -142,6 +154,7 @@ const CommunityPage = () => {
 
     socket.on("voice_users_list", ({ channelId, users }) => {
       if (channelId === activeChannel) {
+        console.log("Received voice users list:", users);
         setConnectedUsers(users);
       }
     });
@@ -312,15 +325,18 @@ const CommunityPage = () => {
       await joinVoiceChannel();
       setIsVoiceConnected(true);
 
-      // Add current user to connected users list
+      // Add current user to connected users list immediately
       setConnectedUsers((prev) => {
+        // Make sure we don't add duplicates
         if (!prev.some((u) => u._id === user._id)) {
+          console.log("Adding current user to connected users:", user);
           return [...prev, user];
         }
         return prev;
       });
 
       // Request the current list of users in the voice channel
+      console.log("Requesting voice channel users for channel:", activeChannel);
       socket.emit("get_voice_users", { channelId: activeChannel });
 
       toast.success("Joined voice channel");
@@ -900,6 +916,8 @@ const CommunityPage = () => {
                             "/placeholder.svg?height=40&width=40" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg"
                           }
                           alt={message.sender?.username || "User"}
@@ -1195,6 +1213,8 @@ const CommunityPage = () => {
                           src={
                             video.thumbnail ||
                             "/placeholder.svg?height=40&width=60" ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg"
