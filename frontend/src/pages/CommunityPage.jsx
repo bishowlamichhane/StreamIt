@@ -59,6 +59,12 @@ const CommunityPage = () => {
   const messagesEndRef = useRef(null);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef(null);
+  const [connectedUsers, setConnectedUsers] = useState([]);
+
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [communityName, setCommunityName] = useState("");
+  const [communityDescription, setCommunityDescription] = useState("");
+  const [creatingCommunity, setCreatingCommunity] = useState(false);
 
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -90,6 +96,8 @@ const CommunityPage = () => {
     onlineUsers,
     startTyping,
     stopTyping,
+    joinVoiceChannel,
+    leaveVoiceChannel,
   } = useCommunityStore();
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -250,19 +258,53 @@ const CommunityPage = () => {
   const handleChannelChange = (channelId) => {
     setActiveChannel(channelId);
     setStoreActiveChannel(channelId);
+
+    // Reset voice connection state when changing channels
+    if (isVoiceConnected) {
+      handleLeaveVoice();
+    }
   };
 
-  const toggleVoiceConnection = () => {
-    setIsVoiceConnected(!isVoiceConnected);
-    if (isVoiceConnected) {
+  const handleJoinVoice = async () => {
+    try {
+      await joinVoiceChannel();
+      setIsVoiceConnected(true);
+
+      // Add current user to connected users list
+      setConnectedUsers((prev) => {
+        if (!prev.some((u) => u._id === user._id)) {
+          return [...prev, user];
+        }
+        return prev;
+      });
+
+      toast.success("Joined voice channel");
+    } catch (err) {
+      console.error("Error joining voice channel", err);
+      toast.error("Failed to join voice channel");
+    }
+  };
+
+  const handleLeaveVoice = () => {
+    try {
+      leaveVoiceChannel();
+      setIsVoiceConnected(false);
       setIsMuted(false);
       setIsDeafened(false);
-      // Emit leave voice channel event
-      socket.emit("leave_voice", activeChannel);
-    } else {
-      // Emit join voice channel event
-      socket.emit("join_voice", activeChannel);
+
+      // Remove current user from connected users list
+      setConnectedUsers((prev) => prev.filter((u) => u._id !== user._id));
+
+      toast.info("Left voice channel");
+    } catch (err) {
+      console.error("Error leaving voice channel", err);
+      toast.error("Failed to leave voice channel");
     }
+  };
+
+  const handleToggleMute = () => {
+    setIsMuted(!isMuted);
+    // Here you would typically also mute the actual audio stream
   };
 
   // Find current channel object
@@ -272,7 +314,7 @@ const CommunityPage = () => {
     ...channels.voice,
   ].find((channel) => channel?._id === activeChannel);
 
-  const isVoiceChannel = currentChannel?.isVoice || false;
+  const isVoiceChannel = currentChannel?.type === "voice";
   const isVideoChannel = currentChannel?.type === "video";
 
   const handleInputChange = (e) => {
@@ -305,6 +347,32 @@ const CommunityPage = () => {
     };
   }, []);
 
+  const handleCreateCommunity = async (e) => {
+    e.preventDefault();
+    setCreatingCommunity(true);
+    try {
+      const response = await API.post("/v1/community/create-community", {
+        name: communityName,
+        description: communityDescription,
+      });
+
+      if (response.status === 201) {
+        toast.success("Community created successfully!");
+        setCommunityName("");
+        setCommunityDescription("");
+        setShowCreateForm(false);
+        navigate(`/community/${response.data.data._id}`);
+      } else {
+        toast.error("Failed to create community.");
+      }
+    } catch (error) {
+      console.error("Error creating community:", error);
+      toast.error("An error occurred while creating the community.");
+    } finally {
+      setCreatingCommunity(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen bg-background text-foreground">
@@ -322,6 +390,179 @@ const CommunityPage = () => {
               <p className="text-muted-foreground">Loading community...</p>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No community found UI
+  if (!community) {
+    return (
+      <div className="flex h-screen bg-background text-foreground">
+        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <div
+          className={clsx(
+            "flex flex-col flex-1 w-full transition-all duration-300",
+            isSidebarOpen ? "md:ml-64" : "md:ml-16"
+          )}
+        >
+          <Header />
+          <main className="flex-1 p-6 md:p-8 overflow-auto">
+            <div className="max-w-4xl mx-auto px-4">
+              <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                {!showCreateForm ? (
+                  <div className="p-8 text-center">
+                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Users className="w-10 h-10 text-primary" />
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2">
+                      No Community Found
+                    </h2>
+                    <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                      You don't have a community yet. Create your own community
+                      to connect with your audience, host discussions, and share
+                      content in real-time.
+                    </p>
+                    <button
+                      onClick={() => setShowCreateForm(true)}
+                      className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Create Your Community
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-8">
+                    <div className="flex items-center mb-6">
+                      <button
+                        onClick={() => setShowCreateForm(false)}
+                        className="mr-4 p-2 rounded-full hover:bg-muted transition-colors"
+                      >
+                        <ChevronDown className="w-5 h-5 transform rotate-90" />
+                      </button>
+                      <h2 className="text-2xl font-bold">
+                        Create Your Community
+                      </h2>
+                    </div>
+
+                    <form
+                      onSubmit={handleCreateCommunity}
+                      className="space-y-6"
+                    >
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="community-name"
+                          className="block text-sm font-medium"
+                        >
+                          Community Name{" "}
+                          <span className="text-destructive">*</span>
+                        </label>
+                        <input
+                          id="community-name"
+                          type="text"
+                          value={communityName}
+                          onChange={(e) => setCommunityName(e.target.value)}
+                          placeholder="Enter community name"
+                          className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="community-description"
+                          className="block text-sm font-medium"
+                        >
+                          Description{" "}
+                          <span className="text-muted-foreground">
+                            (optional)
+                          </span>
+                        </label>
+                        <textarea
+                          id="community-description"
+                          value={communityDescription}
+                          onChange={(e) =>
+                            setCommunityDescription(e.target.value)
+                          }
+                          placeholder="Describe what your community is about"
+                          className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary min-h-[120px] text-foreground"
+                        />
+                      </div>
+
+                      <div className="pt-4 flex justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setShowCreateForm(false)}
+                          className="px-5 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={creatingCommunity || !communityName.trim()}
+                          className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center"
+                        >
+                          {creatingCommunity ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2"></div>
+                              Creating...
+                            </>
+                          ) : (
+                            <>Create Community</>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* Community benefits section */}
+                <div className="bg-muted/50 border-t border-border p-8">
+                  <h3 className="text-lg font-semibold mb-4">
+                    Community Features
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="flex items-start">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
+                        <MessageSquare className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-1">Real-time Chat</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Connect with your audience through text, voice, and
+                          video channels
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
+                        <Video className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-1">Video Channels</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Share and discuss your videos with community members
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
+                        <UserPlus className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-1">Grow Your Audience</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Build a dedicated space for your fans and followers
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -451,26 +692,63 @@ const CommunityPage = () => {
 
                   <div className="space-y-1 mt-1">
                     {channels.voice.map((channel) => (
-                      <button
+                      <div
                         key={channel._id}
-                        className={clsx(
-                          "w-full flex items-center p-2 rounded text-sm group",
-                          activeChannel === channel._id
-                            ? "bg-sidebar-accent "
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                        )}
-                        onClick={() => handleChannelChange(channel._id)}
+                        className="rounded-md overflow-hidden"
                       >
-                        <Volume2 size={18} className="mr-2" />
-                        <span>{channel.name}</span>
-                      </button>
+                        <button
+                          className={clsx(
+                            "w-full flex items-center p-2 rounded-t-md text-sm group",
+                            activeChannel === channel._id
+                              ? "bg-sidebar-accent "
+                              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                          )}
+                          onClick={() => handleChannelChange(channel._id)}
+                        >
+                          <Volume2 size={18} className="mr-2" />
+                          <span>{channel.name}</span>
+                        </button>
+
+                        {/* Show connected users if this is the active channel and user is connected */}
+                        {activeChannel === channel._id && isVoiceConnected && (
+                          <div className="bg-sidebar-accent/30 rounded-b-md px-2 py-1 ml-6 mr-2 mb-1">
+                            <div className="flex items-center text-xs text-sidebar-foreground/80 mb-1">
+                              <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                              <span className="flex-1">
+                                {user.username || "You"}
+                              </span>
+                              {isMuted ? (
+                                <MicOff size={10} className="text-red-500" />
+                              ) : (
+                                <Mic size={10} className="text-green-500" />
+                              )}
+                            </div>
+
+                            {/* You can add more connected users here */}
+                            {connectedUsers
+                              .filter((u) => u._id !== user._id)
+                              .map((connectedUser) => (
+                                <div
+                                  key={connectedUser._id}
+                                  className="flex items-center text-xs text-sidebar-foreground/80 mb-1"
+                                >
+                                  <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                                  <span className="flex-1">
+                                    {connectedUser.username}
+                                  </span>
+                                  <Mic size={10} className="text-green-500" />
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* User Voice Controls - Only show when in voice channel */}
-              {isVoiceChannel && (
+              {/* User Voice Controls - Only show when in voice channel and connected */}
+              {isVoiceChannel && isVoiceConnected && (
                 <div className="p-3 bg-sidebar-accent/30 border-t border-sidebar-border">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -482,57 +760,30 @@ const CommunityPage = () => {
                           {user?.username || "User"}
                         </div>
                         <div className="text-sidebar-foreground/70">
-                          {isVoiceConnected ? "Connected" : "Disconnected"}
+                          Connected to voice
                         </div>
                       </div>
                     </div>
 
                     <div className="flex items-center space-x-1">
-                      {isVoiceConnected ? (
-                        <>
-                          <button
-                            onClick={() => setIsMuted(!isMuted)}
-                            className={clsx(
-                              "p-1.5 rounded-full",
-                              isMuted
-                                ? "bg-red-500/20 text-red-500"
-                                : "hover:bg-sidebar-accent"
-                            )}
-                          >
-                            {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
-                          </button>
+                      <button
+                        onClick={handleToggleMute}
+                        className={clsx(
+                          "p-1.5 rounded-full",
+                          isMuted
+                            ? "bg-red-500/20 text-red-500"
+                            : "hover:bg-sidebar-accent"
+                        )}
+                      >
+                        {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
+                      </button>
 
-                          <button
-                            onClick={() => setIsDeafened(!isDeafened)}
-                            className={clsx(
-                              "p-1.5 rounded-full",
-                              isDeafened
-                                ? "bg-red-500/20 text-red-500"
-                                : "hover:bg-sidebar-accent"
-                            )}
-                          >
-                            {isDeafened ? (
-                              <PhoneOff size={16} />
-                            ) : (
-                              <Headphones size={16} />
-                            )}
-                          </button>
-
-                          <button
-                            onClick={toggleVoiceConnection}
-                            className="p-1.5 rounded-full bg-red-500/20 text-red-500 hover:bg-red-500/30"
-                          >
-                            <PhoneOff size={16} />
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={toggleVoiceConnection}
-                          className="p-1.5 rounded-full bg-green-500/20 text-green-500 hover:bg-green-500/30"
-                        >
-                          <Headphones size={16} />
-                        </button>
-                      )}
+                      <button
+                        onClick={handleLeaveVoice}
+                        className="p-1.5 rounded-full bg-red-500/20 text-red-500 hover:bg-red-500/30"
+                      >
+                        <PhoneOff size={16} />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -602,6 +853,7 @@ const CommunityPage = () => {
                           src={
                             message.sender?.avatar ||
                             "/placeholder.svg?height=40&width=40" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg"
                           }
                           alt={message.sender?.username || "User"}
@@ -710,14 +962,125 @@ const CommunityPage = () => {
 
               {/* Voice Channel UI - Only show for voice channels */}
               {isVoiceChannel && !isVoiceConnected && (
-                <div className="p-4 border-t border-border">
-                  <button
-                    onClick={toggleVoiceConnection}
-                    className="w-full py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center"
-                  >
-                    <Headphones size={18} className="mr-2" />
-                    Join Voice
-                  </button>
+                <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full shadow-sm text-center">
+                    <Volume2 className="w-12 h-12 mx-auto text-primary/70 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">
+                      Voice Channel: {currentChannel?.name || "Voice"}
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      Connect to this voice channel to chat with other members
+                    </p>
+
+                    <button
+                      onClick={handleJoinVoice}
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors mx-auto"
+                    >
+                      <Headphones size={18} />
+                      <span>Join Voice</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Voice Channel Connected UI */}
+              {isVoiceChannel && isVoiceConnected && (
+                <div className="flex-1 flex flex-col">
+                  <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                    <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full shadow-sm">
+                      <h3 className="text-xl font-semibold mb-4 text-center">
+                        Connected to {currentChannel?.name || "Voice"}
+                      </h3>
+
+                      <div className="bg-muted/30 rounded-lg p-4 mb-6">
+                        <h4 className="text-sm font-medium mb-3 flex items-center">
+                          <Users className="w-4 h-4 mr-2 text-muted-foreground" />
+                          <span>Connected Users</span>
+                        </h4>
+
+                        <div className="space-y-2">
+                          {/* Current user */}
+                          <div className="flex items-center justify-between bg-background/50 p-2 rounded-md">
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-2">
+                                {user?.username?.charAt(0).toUpperCase() || "U"}
+                              </div>
+                              <span className="text-sm">
+                                {user?.username || "You"}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <button
+                                onClick={handleToggleMute}
+                                className={clsx(
+                                  "p-1.5 rounded-full transition-colors",
+                                  isMuted ? "text-red-500" : "text-green-500"
+                                )}
+                              >
+                                {isMuted ? (
+                                  <MicOff size={14} />
+                                ) : (
+                                  <Mic size={14} />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Other connected users */}
+                          {connectedUsers
+                            .filter((u) => u._id !== user._id)
+                            .map((connectedUser) => (
+                              <div
+                                key={connectedUser._id}
+                                className="flex items-center justify-between bg-background/50 p-2 rounded-md"
+                              >
+                                <div className="flex items-center">
+                                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-2">
+                                    {connectedUser.username
+                                      ?.charAt(0)
+                                      .toUpperCase() || "U"}
+                                  </div>
+                                  <span className="text-sm">
+                                    {connectedUser.username}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <div className="p-1.5 text-green-500">
+                                    <Mic size={14} />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Voice Controls Bottom Bar */}
+                  <div className="border-t border-border bg-card p-4">
+                    <div className="flex items-center justify-center gap-4">
+                      <button
+                        onClick={handleToggleMute}
+                        className={clsx(
+                          "flex items-center gap-2 px-4 py-2 rounded-md transition-colors",
+                          isMuted
+                            ? "bg-red-500/20 text-red-500 hover:bg-red-500/30"
+                            : "bg-muted hover:bg-muted/80"
+                        )}
+                      >
+                        {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
+                        <span>{isMuted ? "Unmute" : "Mute"}</span>
+                      </button>
+
+                      <button
+                        onClick={handleLeaveVoice}
+                        className="flex items-center gap-2 px-4 py-2 bg-destructive text-white rounded-md hover:bg-destructive/90 transition-colors"
+                      >
+                        <PhoneOff size={16} />
+                        <span>Disconnect</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -786,6 +1149,7 @@ const CommunityPage = () => {
                           src={
                             video.thumbnail ||
                             "/placeholder.svg?height=40&width=60" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg"
                           }
                           alt={video.title}

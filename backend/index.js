@@ -35,6 +35,13 @@ io.on("connection", (socket) => {
   // Store user data in socket for later use
   let currentUser = null
   let currentCommunity = null
+// WebRTC signaling (offer, answer, ICE candidates)
+socket.on("webrtc_signal", ({ channelId, signalData, senderId }) => {
+  if (channelId) {
+    // Forward signal data to other peers in the channel
+    socket.to(channelId).emit("webrtc_signal", { signalData, senderId: socket.id });
+  }
+});
 
   // User authentication and presence
   socket.on("authenticate", async (userData) => {
