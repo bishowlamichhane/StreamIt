@@ -17,8 +17,6 @@ export const useCommunityStore = create((set, get) => ({
   },
   onlineUsers: [],
   typingUsers: {},
-  peerConnection: null,
-  localStream: null,
 
   setActiveChannel: (channelId) => set({ activeChannel: channelId }),
 
@@ -31,15 +29,6 @@ export const useCommunityStore = create((set, get) => ({
     socket.off("user_stopped_typing")
     socket.off("message_deleted")
     socket.off("message_updated")
-    socket.off("webrtc_signal") // clean previous listeners
-
-    socket.on("webrtc_signal", ({ signalData, senderId }) => {
-      // Call your handler function here (we'll define it next)
-      const handleWebRTCSignal = get().handleWebRTCSignal
-      if (handleWebRTCSignal) {
-        handleWebRTCSignal(signalData, senderId)
-      }
-    })
 
     // Update connection status
     socket.on("connect", () => {
@@ -319,111 +308,6 @@ export const useCommunityStore = create((set, get) => ({
     get().stopTyping(channelId)
 
     return messageData
-  },
-  // Handle incoming WebRTC signals
-  handleWebRTCSignal: async (signalData, senderId) => {
-    const { peerConnection, localStream, activeChannel } = get()
-
-    if (!peerConnection && localStream) {
-      await get().createPeerConnection(localStream)
-    }
-
-    if (signalData.sdp) {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(signalData.sdp))
-      if (signalData.sdp.type === "offer") {
-        const answer = await peerConnection.createAnswer()
-        await peerConnection.setLocalDescription(answer)
-        socket.emit("webrtc_signal", { channelId: activeChannel, signalData: { sdp: answer }, senderId: socket.id })
-      }
-    }
-
-    if (signalData.candidate) {
-      await peerConnection.addIceCandidate(new RTCIceCandidate(signalData.candidate))
-    }
-  },
-
-  // Initialize Peer Connection & Local Audio
-  createPeerConnection: async (stream) => {
-    const { activeChannel } = get()
-    const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] })
-
-    stream.getTracks().forEach((track) => pc.addTrack(track, stream))
-
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("webrtc_signal", {
-          channelId: activeChannel,
-          signalData: { candidate: event.candidate },
-          senderId: socket.id,
-        })
-      }
-    }
-
-    pc.ontrack = (event) => {
-      const remoteAudio = new Audio()
-      remoteAudio.srcObject = event.streams[0]
-      remoteAudio.autoplay = true
-      remoteAudio.play()
-    }
-
-    set({ peerConnection: pc })
-  },
-
-  // Join voice channel (start stream + signaling)
-  joinVoiceChannel: async () => {
-    const { activeChannel } = get()
-    const user = useAuthStore.getState().user
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    set({ localStream: stream })
-
-    await get().createPeerConnection(stream)
-
-    // Create Offer
-    const pc = get().peerConnection
-    const offer = await pc.createOffer()
-    await pc.setLocalDescription(offer)
-
-    // Notify server about joining voice channel with complete user object
-    console.log("Emitting join_voice_channel with user:", user)
-    socket.emit("join_voice_channel", {
-      channelId: activeChannel,
-      user: {
-        _id: user._id,
-        username: user.username,
-        avatar: user.avatar,
-        fullName: user.fullName,
-      },
-    })
-
-    socket.emit("webrtc_signal", { channelId: activeChannel, signalData: { sdp: offer }, senderId: socket.id })
-  },
-
-  // Leave voice channel (cleanup)
-  leaveVoiceChannel: () => {
-    const { peerConnection, localStream, activeChannel } = get()
-    const user = useAuthStore.getState().user
-
-    if (peerConnection) {
-      peerConnection.close()
-    }
-
-    if (localStream) {
-      localStream.getTracks().forEach((track) => track.stop())
-    }
-
-    // Notify server about leaving voice channel
-    console.log("Emitting leave_voice_channel for user:", user._id)
-    socket.emit("leave_voice_channel", {
-      channelId: activeChannel,
-      userId: user._id,
-    })
-
-    set({ peerConnection: null, localStream: null })
-  },
-
-  // Request the list of users in a voice channel
-  getVoiceChannelUsers: (channelId) => {
-    socket.emit("get_voice_users", { channelId })
   },
 
   deleteMessage: async (channelId, messageId) => {

@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { ToastProvider } from "@/components/ToastProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
-
+import { motion } from "framer-motion";
 const App = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,13 +28,25 @@ const App = () => {
     }
   }, [isLoggedIn, location.pathname]);
 
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-background text-foreground">
-        <ToastProvider />
-        <Outlet />
-      </div>
-    </ThemeProvider>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isVisible ? 1 : 0 }}
+      transition={{ duration: 1.0 }}
+    >
+      <ThemeProvider>
+        <div className="min-h-screen bg-background text-foreground">
+          <ToastProvider />
+          <Outlet />
+        </div>
+      </ThemeProvider>
+    </motion.div>
   );
 };
 

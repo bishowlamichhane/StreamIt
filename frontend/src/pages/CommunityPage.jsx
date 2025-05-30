@@ -47,9 +47,6 @@ const CommunityPage = () => {
   const [activeChannel, setActiveChannel] = useState(null);
   const [showMembers, setShowMembers] = useState(true);
   const [inputMessage, setInputMessage] = useState("");
-  const [isVoiceConnected, setIsVoiceConnected] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isDeafened, setIsDeafened] = useState(false);
   const [community, setCommunity] = useState(null);
   const [loading, setLoading] = useState(true);
   const [messageLoading, setMessageLoading] = useState(false);
@@ -59,7 +56,6 @@ const CommunityPage = () => {
   const messagesEndRef = useRef(null);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef(null);
-  const [connectedUsers, setConnectedUsers] = useState([]);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [communityName, setCommunityName] = useState("");
@@ -96,8 +92,6 @@ const CommunityPage = () => {
     onlineUsers,
     startTyping,
     stopTyping,
-    joinVoiceChannel,
-    leaveVoiceChannel,
   } = useCommunityStore();
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -122,43 +116,6 @@ const CommunityPage = () => {
       socket.emit("join_community", id);
     }
 
-    // Add these new socket listeners for voice channel participants
-    socket.on("voice_user_joined", ({ channelId, user: joinedUser }) => {
-      console.log(
-        "User joined voice channel:",
-        joinedUser,
-        "in channel:",
-        channelId
-      );
-      if (channelId === activeChannel) {
-        setConnectedUsers((prev) => {
-          if (!prev.some((u) => u._id === joinedUser._id)) {
-            return [...prev, joinedUser];
-          }
-          return prev;
-        });
-      }
-    });
-
-    socket.on("voice_user_left", ({ channelId, userId }) => {
-      console.log(
-        "User left voice channel:",
-        userId,
-        "from channel:",
-        channelId
-      );
-      if (channelId === activeChannel) {
-        setConnectedUsers((prev) => prev.filter((u) => u._id !== userId));
-      }
-    });
-
-    socket.on("voice_users_list", ({ channelId, users }) => {
-      if (channelId === activeChannel) {
-        console.log("Received voice users list:", users);
-        setConnectedUsers(users);
-      }
-    });
-
     // Debug socket connection status
     console.log(
       "Socket connection status:",
@@ -170,12 +127,8 @@ const CommunityPage = () => {
       if (id) {
         socket.emit("leave_community", id);
       }
-      // Clean up voice channel socket listeners
-      socket.off("voice_user_joined");
-      socket.off("voice_user_left");
-      socket.off("voice_users_list");
     };
-  }, [id, initSocketListeners, cleanupSocketListeners, user, activeChannel]);
+  }, [id, initSocketListeners, cleanupSocketListeners, user]);
 
   // Fetch community data and channels
   useEffect(() => {
@@ -299,73 +252,6 @@ const CommunityPage = () => {
   const handleChannelChange = (channelId) => {
     setActiveChannel(channelId);
     setStoreActiveChannel(channelId);
-
-    // Reset voice connection state when changing channels
-    if (isVoiceConnected) {
-      handleLeaveVoice();
-    }
-
-    // Reset connected users list when changing channels
-    setConnectedUsers([]);
-
-    // If the new channel is a voice channel, request the current users list
-    const newChannel = [
-      ...channels.text,
-      ...channels.video,
-      ...channels.voice,
-    ].find((channel) => channel?._id === channelId);
-
-    if (newChannel?.type === "voice") {
-      socket.emit("get_voice_users", { channelId });
-    }
-  };
-
-  const handleJoinVoice = async () => {
-    try {
-      await joinVoiceChannel();
-      setIsVoiceConnected(true);
-
-      // Add current user to connected users list immediately
-      setConnectedUsers((prev) => {
-        // Make sure we don't add duplicates
-        if (!prev.some((u) => u._id === user._id)) {
-          console.log("Adding current user to connected users:", user);
-          return [...prev, user];
-        }
-        return prev;
-      });
-
-      // Request the current list of users in the voice channel
-      console.log("Requesting voice channel users for channel:", activeChannel);
-      socket.emit("get_voice_users", { channelId: activeChannel });
-
-      toast.success("Joined voice channel");
-    } catch (err) {
-      console.error("Error joining voice channel", err);
-      toast.error("Failed to join voice channel");
-    }
-  };
-
-  const handleLeaveVoice = () => {
-    try {
-      leaveVoiceChannel();
-      setIsVoiceConnected(false);
-      setIsMuted(false);
-      setIsDeafened(false);
-
-      // Remove current user from connected users list
-      setConnectedUsers((prev) => prev.filter((u) => u._id !== user._id));
-
-      toast.info("Left voice channel");
-    } catch (err) {
-      console.error("Error leaving voice channel", err);
-      toast.error("Failed to leave voice channel");
-    }
-  };
-
-  const handleToggleMute = () => {
-    setIsMuted(!isMuted);
-    // Here you would typically also mute the actual audio stream
   };
 
   // Find current channel object
@@ -375,8 +261,8 @@ const CommunityPage = () => {
     ...channels.voice,
   ].find((channel) => channel?._id === activeChannel);
 
-  const isVoiceChannel = currentChannel?.type === "voice";
   const isVideoChannel = currentChannel?.type === "video";
+  const isVoiceChannel = currentChannel?.type === "voice";
 
   const handleInputChange = (e) => {
     setInputMessage(e.target.value);
@@ -769,94 +655,13 @@ const CommunityPage = () => {
                           <Volume2 size={18} className="mr-2" />
                           <span>{channel.name}</span>
                         </button>
-
-                        {/* Show connected users if this is the active channel and user is connected */}
-                        {activeChannel === channel._id && isVoiceConnected && (
-                          <div className="bg-sidebar-accent/30 rounded-b-md px-2 py-1 ml-6 mr-2 mb-1">
-                            <div className="flex items-center text-xs text-sidebar-foreground/80 mb-1">
-                              <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                              <span className="flex-1">
-                                {user.username || "You"}
-                              </span>
-                              {isMuted ? (
-                                <MicOff size={10} className="text-red-500" />
-                              ) : (
-                                <Mic size={10} className="text-green-500" />
-                              )}
-                            </div>
-
-                            {/* You can add more connected users here */}
-                            {connectedUsers
-                              .filter((u) => u._id !== user._id)
-                              .map((connectedUser) => (
-                                <div
-                                  key={connectedUser._id}
-                                  className="flex items-center text-xs text-sidebar-foreground/80 mb-1"
-                                >
-                                  <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                                  <span className="flex-1">
-                                    {connectedUser.username}
-                                  </span>
-                                  <Mic size={10} className="text-green-500" />
-                                </div>
-                              ))}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
+
+                  {/* Voice Channel UI - Show disabled state */}
                 </div>
               </div>
-
-              {/* User Voice Controls - Only show when in voice channel and connected */}
-              {isVoiceChannel && isVoiceConnected && (
-                <div className="p-3 bg-sidebar-accent/30 border-t border-sidebar-border">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-2">
-                        {user?.username?.charAt(0).toUpperCase() || "U"}
-                      </div>
-                      <div className="text-xs">
-                        <div className="font-medium">
-                          {user?.username || "User"}
-                        </div>
-                        <div className="text-sidebar-foreground/70">
-                          Connected to voice
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={handleToggleMute}
-                        className={clsx(
-                          "p-1.5 rounded-full",
-                          isMuted
-                            ? "bg-red-500/20 text-red-500"
-                            : "hover:bg-sidebar-accent"
-                        )}
-                      >
-                        {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
-                      </button>
-
-                      <button
-                        onClick={handleLeaveVoice}
-                        className="p-1.5 rounded-full bg-red-500/20 text-red-500 hover:bg-red-500/30"
-                      >
-                        <PhoneOff size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Add a close button for mobile */}
-              <button
-                onClick={toggleSidebar}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-sidebar-accent text-sidebar-foreground md:hidden"
-              >
-                <X size={18} />
-              </button>
             </div>
 
             {/* Main Chat Area */}
@@ -875,9 +680,6 @@ const CommunityPage = () => {
                   )}
                   {currentChannel?.type === "video" && (
                     <Video size={18} className="mr-2 text-muted-foreground" />
-                  )}
-                  {currentChannel?.type === "voice" && (
-                    <Volume2 size={18} className="mr-2 text-muted-foreground" />
                   )}
                   <h3 className="font-medium truncate">
                     {currentChannel?.linkedVideo?.title ||
@@ -914,6 +716,7 @@ const CommunityPage = () => {
                           src={
                             message.sender?.avatar ||
                             "/placeholder.svg?height=40&width=40" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
@@ -988,7 +791,7 @@ const CommunityPage = () => {
               </div>
 
               {/* Message Input - Only show for text and video channels */}
-              {!isVoiceChannel && (
+              {!isVideoChannel && (
                 <div className="border-t border-border">
                   <TypingIndicator channelId={activeChannel} />
                   <div className="p-2 sm:p-4">
@@ -1020,130 +823,6 @@ const CommunityPage = () => {
                         <Send size={18} />
                       </button>
                     </form>
-                  </div>
-                </div>
-              )}
-
-              {/* Voice Channel UI - Only show for voice channels */}
-              {isVoiceChannel && !isVoiceConnected && (
-                <div className="flex-1 flex flex-col items-center justify-center">
-                  <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full shadow-sm text-center">
-                    <Volume2 className="w-12 h-12 mx-auto text-primary/70 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">
-                      Voice Channel: {currentChannel?.name || "Voice"}
-                    </h3>
-                    <p className="text-muted-foreground mb-6">
-                      Connect to this voice channel to chat with other members
-                    </p>
-
-                    <button
-                      onClick={handleJoinVoice}
-                      className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors mx-auto"
-                    >
-                      <Headphones size={18} />
-                      <span>Join Voice</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Voice Channel Connected UI */}
-              {isVoiceChannel && isVoiceConnected && (
-                <div className="flex-1 flex flex-col">
-                  <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                    <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full shadow-sm">
-                      <h3 className="text-xl font-semibold mb-4 text-center">
-                        Connected to {currentChannel?.name || "Voice"}
-                      </h3>
-
-                      <div className="bg-muted/30 rounded-lg p-4 mb-6">
-                        <h4 className="text-sm font-medium mb-3 flex items-center">
-                          <Users className="w-4 h-4 mr-2 text-muted-foreground" />
-                          <span>Connected Users</span>
-                        </h4>
-
-                        <div className="space-y-2">
-                          {/* Current user */}
-                          <div className="flex items-center justify-between bg-background/50 p-2 rounded-md">
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-2">
-                                {user?.username?.charAt(0).toUpperCase() || "U"}
-                              </div>
-                              <span className="text-sm">
-                                {user?.username || "You"}
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <button
-                                onClick={handleToggleMute}
-                                className={clsx(
-                                  "p-1.5 rounded-full transition-colors",
-                                  isMuted ? "text-red-500" : "text-green-500"
-                                )}
-                              >
-                                {isMuted ? (
-                                  <MicOff size={14} />
-                                ) : (
-                                  <Mic size={14} />
-                                )}
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Other connected users */}
-                          {connectedUsers
-                            .filter((u) => u._id !== user._id)
-                            .map((connectedUser) => (
-                              <div
-                                key={connectedUser._id}
-                                className="flex items-center justify-between bg-background/50 p-2 rounded-md"
-                              >
-                                <div className="flex items-center">
-                                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-2">
-                                    {connectedUser.username
-                                      ?.charAt(0)
-                                      .toUpperCase() || "U"}
-                                  </div>
-                                  <span className="text-sm">
-                                    {connectedUser.username}
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <div className="p-1.5 text-green-500">
-                                    <Mic size={14} />
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Voice Controls Bottom Bar */}
-                  <div className="border-t border-border bg-card p-4">
-                    <div className="flex items-center justify-center gap-4">
-                      <button
-                        onClick={handleToggleMute}
-                        className={clsx(
-                          "flex items-center gap-2 px-4 py-2 rounded-md transition-colors",
-                          isMuted
-                            ? "bg-red-500/20 text-red-500 hover:bg-red-500/30"
-                            : "bg-muted hover:bg-muted/80"
-                        )}
-                      >
-                        {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
-                        <span>{isMuted ? "Unmute" : "Mute"}</span>
-                      </button>
-
-                      <button
-                        onClick={handleLeaveVoice}
-                        className="flex items-center gap-2 px-4 py-2 bg-destructive text-white rounded-md hover:bg-destructive/90 transition-colors"
-                      >
-                        <PhoneOff size={16} />
-                        <span>Disconnect</span>
-                      </button>
-                    </div>
                   </div>
                 </div>
               )}
@@ -1213,6 +892,7 @@ const CommunityPage = () => {
                           src={
                             video.thumbnail ||
                             "/placeholder.svg?height=40&width=60" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||

@@ -75,7 +75,7 @@ export default function VideoPlayer() {
 
   useEffect(() => {
     const fetchSubs = async () => {
-      if (!video?.owner?._id) return; // ✅ Wait for video to be loaded
+      if (!video?.owner?._id || !user?.username) return;
 
       try {
         const res = await API.get(`/v1/subs/subCount/${video.owner?._id}`, {
@@ -84,19 +84,20 @@ export default function VideoPlayer() {
           },
         });
         const subscribers = res.data.data;
+        console.log("subscribers", subscribers);
         setSubCount(subscribers.subsCount);
-        setIsSubscribed(
-          subscribers.subscribers.map(
-            (sub) => sub[0].username === user?.username
-          )
+        const isUserSubscribed = subscribers.subscribers.some(
+          (sub) => sub.username === user?.username
         );
+        console.log("isUserSubscribed:", isUserSubscribed); // Debug log
+        setIsSubscribed(isUserSubscribed);
       } catch (err) {
         console.error("Error fetching subscriber count", err);
       }
     };
 
     fetchSubs();
-  }, [video]); // ✅ dependency is [video] not []
+  }, [video?.owner?._id, user?.username, user?.accessToken]); // Added accessToken dependency
 
   const handleLikeToggle = async () => {
     try {
@@ -139,24 +140,21 @@ export default function VideoPlayer() {
       });
 
       const message = res.data.message;
+      console.log("message", message);
+
+      const newSubscribedState = message === "Subscribed";
+      setIsSubscribed(newSubscribedState);
+      setSubCount((prev) => (newSubscribedState ? prev + 1 : prev - 1));
+
       if (message === "Subscribed") {
-        setIsSubscribed(true);
         toast.success(
           `Subscribed to ${video.owner.fullName || video.owner.username}`
         );
       } else {
-        setIsSubscribed(false);
         toast.info(
           `Unsubscribed from ${video.owner.fullName || video.owner.username}`
         );
       }
-
-      const updated = await API.get(`/v1/videos/v/${id}`, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
-      setVideo(updated.data.data);
     } catch (err) {
       console.log("Error with subscription :", err);
       toast.error("Failed to update subscription");
@@ -417,7 +415,7 @@ export default function VideoPlayer() {
                       className={`px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer w-full sm:w-auto ${
                         isSubscribed
                           ? "bg-muted text-foreground hover:bg-accent"
-                          : "bg-destructive text-white hover:bg-destructive/90"
+                          : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       }`}
                     >
                       {isSubscribed ? "Subscribed" : "Subscribe"}

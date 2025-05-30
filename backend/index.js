@@ -31,17 +31,9 @@ const onlineUsers = new Map() // communityId -> Set of user objects
 
 // Socket.io connection handling
 io.on("connection", (socket) => {
-
   // Store user data in socket for later use
   let currentUser = null
   let currentCommunity = null
-// WebRTC signaling (offer, answer, ICE candidates)
-socket.on("webrtc_signal", ({ channelId, signalData, senderId }) => {
-  if (channelId) {
-    // Forward signal data to other peers in the channel
-    socket.to(channelId).emit("webrtc_signal", { signalData, senderId: socket.id });
-  }
-});
 
   // User authentication and presence
   socket.on("authenticate", async (userData) => {
@@ -119,7 +111,6 @@ socket.on("webrtc_signal", ({ channelId, signalData, senderId }) => {
   // Handle message sending
   socket.on("send_message", async (data) => {
     try {
-
       // Save message to database if needed
       if (data.channel && data.text && data.sender) {
         const newMsg = new CommunityMessage({
@@ -198,7 +189,6 @@ socket.on("webrtc_signal", ({ channelId, signalData, senderId }) => {
   })
 
   socket.on("disconnect", () => {
-
     // Update user presence when disconnected
     if (currentUser && currentCommunity) {
       updateUserPresence(currentCommunity, currentUser, false)
